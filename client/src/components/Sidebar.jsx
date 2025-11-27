@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun, RotateCcw } from 'lucide-react';
 import { useStock } from '../context/StockContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -17,6 +17,7 @@ const Sidebar = () => {
         { path: '/stock-in', label: 'Stock In', icon: <ArrowDownLeft size={20} /> },
         { path: '/stock-out', label: 'Stock Out', icon: <ArrowUpRight size={20} /> },
         { path: '/reports', label: 'Reports', icon: <FileText size={20} /> },
+        { path: '/return', label: 'Return', icon: <RotateCcw size={20} /> },
     ];
 
     const handleReset = async () => {

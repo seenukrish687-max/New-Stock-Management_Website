@@ -9,6 +9,7 @@ import Products from './pages/Products';
 import StockIn from './pages/StockIn';
 import StockOut from './pages/StockOut';
 import Reports from './pages/Reports';
+import ReturnProduct from './pages/ReturnProduct';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
                   <Route path="/stock-in" element={<StockIn />} />
                   <Route path="/stock-out" element={<StockOut />} />
                   <Route path="/reports" element={<Reports />} />
+                  <Route path="/return" element={<ReturnProduct />} />
                 </Routes>
               </main>
             </div>
