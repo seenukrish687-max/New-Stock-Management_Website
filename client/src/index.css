@@ -1,0 +1,134 @@
+:root {
+  --color-primary-bg: #CDCBD6;
+  --color-primary-accent: #D96846;
+  --color-secondary-accent: #596235;
+  --color-dark-accent: #2F3020;
+  --color-white: #FFFFFF;
+  --color-text-main: #2F3020;
+  --color-text-light: #FFFFFF;
+  --color-card-bg: #FFFFFF;
+  --color-input-bg: #FFFFFF;
+  --color-input-border: #ddd;
+}
+
+.dark-mode {
+  --color-primary-bg: #121212;
+  --color-primary-accent: #ff8a65;
+  --color-secondary-accent: #aed581;
+  --color-dark-accent: #1e1e1e;
+  --color-white: #1e1e1e; /* Card BG in dark mode */
+  --color-text-main: #e0e0e0;
+  --color-text-light: #b0b0b0;
+  --color-card-bg: #1e1e1e;
+  --color-input-bg: #2c2c2c;
+  --color-input-border: #444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-primary-bg);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+
+/* Utility Classes */
+.btn-primary {
+  background-color: var(--color-primary-accent);
+  color: #fff; /* Always white text on primary buttons */
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary-accent);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+
+.card {
+  background-color: var(--color-card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  background-color: var(--color-input-bg);
+  color: var(--color-text-main);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.input-field:focus {
+  outline: 2px solid var(--color-primary-accent);
+  border-color: transparent;
+}
+
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.hover-zoom {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-zoom:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Page Transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
