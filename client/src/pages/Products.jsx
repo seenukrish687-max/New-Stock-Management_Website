@@ -127,9 +127,10 @@ const Products = () => {
                 showForm && (
                     <div style={{
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
+                        padding: '1rem'
                     }}>
-                        <div className="card" style={{ width: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div className="card" style={{ width: '500px', maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto', margin: 'auto' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Add New Product</h3>
                                 <button onClick={() => setShowForm(false)} style={{ background: 'none', color: '#666' }}><X size={24} /></button>
