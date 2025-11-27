@@ -91,7 +91,7 @@ const ProductSelectionGrid = ({ products, onSelect, selectedProductId }) => {
                             }}>
                                 {product.imageURL ? (
                                     <img
-                                        src={`${API_URL}${product.imageURL}`}
+                                        src={product.imageURL.startsWith('http') ? product.imageURL : `${API_URL}${product.imageURL}`}
                                         alt={product.name}
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                         onError={(e) => {
