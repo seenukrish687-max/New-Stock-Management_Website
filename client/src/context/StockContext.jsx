@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_URL as BASE_URL } from '../config';
 
 const StockContext = createContext();
 
@@ -9,7 +10,7 @@ export const StockProvider = ({ children }) => {
     const [transactions, setTransactions] = useState({ stockIn: [], stockOut: [] });
     const [loading, setLoading] = useState(true);
 
-    const API_URL = 'http://localhost:5000/api';
+    const API_URL = `${BASE_URL}/api`;
 
     const fetchProducts = async () => {
         try {
