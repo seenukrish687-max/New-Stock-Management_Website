@@ -258,7 +258,7 @@ const Dashboard = () => {
                                     <td style={{ padding: '1rem' }}>
                                         {product.imageURL && (
                                             <img
-                                                src={`${API_URL}${product.imageURL}`}
+                                                src={product.imageURL.startsWith('http') ? product.imageURL : `${API_URL}${product.imageURL}`}
                                                 alt={product.name}
                                                 style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
                                                 onError={(e) => {
