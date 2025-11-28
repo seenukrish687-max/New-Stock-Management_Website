@@ -11,7 +11,10 @@ const ReturnProduct = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
-        notes: ''
+        productId: '',
+        quantity: '',
+        date: new Date().toISOString().split('T')[0],
+        platform: 'Tiktok'
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +31,10 @@ const ReturnProduct = () => {
                 productId: '',
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
-                notes: ''
+                productId: '',
+                quantity: '',
+                date: new Date().toISOString().split('T')[0],
+                platform: 'Tiktok'
             });
         } catch (error) {
             showToast('Failed to return product', 'error');
@@ -79,14 +85,19 @@ const ReturnProduct = () => {
                         </div>
                     </div>
 
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Notes</label>
-                    <textarea
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sales Platform</label>
+                    <select
                         className="input-field"
-                        placeholder="Reason for return..."
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        rows="3"
-                    />
+                        value={formData.platform}
+                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                        required
+                    >
+                        <option value="Tiktok">Tiktok</option>
+                        <option value="Whatsapp">Whatsapp</option>
+                        <option value="Lazada">Lazada</option>
+                        <option value="Shopee">Shopee</option>
+                        <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
+                    </select>
 
                     <button type="submit" className="btn-primary" style={{ width: '100%', backgroundColor: '#ef4444' }} disabled={isSubmitting}>
                         {isSubmitting ? 'Processing Return...' : 'Confirm Return'}
