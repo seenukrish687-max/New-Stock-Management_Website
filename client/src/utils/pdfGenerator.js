@@ -116,6 +116,7 @@ export const generateDailyReportPDF = (data, date, filterType) => {
 
     const tableRows = [...data.stockIn, ...data.stockOut].map(t => [
         t.type === 'IN' ? 'STOCK IN' : 'STOCK OUT',
+        t.platform || '-',
         t.productName,
         t.quantity,
         `RM ${(t.quantity * t.sellingPriceAtTime).toFixed(2)}`,
@@ -124,7 +125,7 @@ export const generateDailyReportPDF = (data, date, filterType) => {
 
     autoTable(doc, {
         startY: y,
-        head: [['Type', 'Product', 'Qty', 'Value', 'Notes']],
+        head: [['Type', 'Platform', 'Product', 'Qty', 'Value', 'Notes']],
         body: tableRows,
         theme: 'grid',
         headStyles: { fillColor: PRIMARY_COLOR },
@@ -183,9 +184,10 @@ export const generateMonthlyReportPDF = (data, month) => {
 
     autoTable(doc, {
         startY: y,
-        head: [['Date', 'Product', 'Qty', 'Total (RM)']],
+        head: [['Date', 'Platform', 'Product', 'Qty', 'Total (RM)']],
         body: data.stockOut.map(t => [
             t.date,
+            t.platform || '-',
             t.productName,
             t.quantity,
             (t.quantity * t.sellingPriceAtTime).toFixed(2)
@@ -246,10 +248,11 @@ export const generateProductReportPDF = (data, product) => {
 
     autoTable(doc, {
         startY: y,
-        head: [['Date', 'Type', 'Qty', 'Notes']],
+        head: [['Date', 'Type', 'Platform', 'Qty', 'Notes']],
         body: data.transactions.map(t => [
             t.date,
             t.type === 'IN' ? 'STOCK IN' : 'STOCK OUT',
+            t.platform || '-',
             t.quantity,
             t.notes || '-'
         ]),
