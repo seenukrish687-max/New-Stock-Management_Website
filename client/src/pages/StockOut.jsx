@@ -10,7 +10,9 @@ const StockOut = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
-        platform: 'Tiktok'
+        platform: 'Tiktok',
+        customerName: '',
+        paymentStatus: 'Paid'
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +34,9 @@ const StockOut = () => {
                 productId: '',
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
-                platform: 'Tiktok'
+                platform: 'Tiktok',
+                customerName: '',
+                paymentStatus: 'Paid'
             });
             setSelectedProduct(null);
         } catch (error) {
@@ -110,6 +114,44 @@ const StockOut = () => {
                         <option value="Shopee">Shopee</option>
                         <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
                     </select>
+
+                    {formData.platform === 'Whatsapp' && (
+                        <div className="animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Customer Name</label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Enter customer name"
+                                value={formData.customerName}
+                                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                                required={formData.platform === 'Whatsapp'}
+                            />
+
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', marginTop: '1rem' }}>Payment Status</label>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="radio"
+                                        name="paymentStatus"
+                                        value="Paid"
+                                        checked={formData.paymentStatus === 'Paid'}
+                                        onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                                    />
+                                    <span style={{ fontWeight: '500', color: '#15803d' }}>Paid</span>
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="radio"
+                                        name="paymentStatus"
+                                        value="COD"
+                                        checked={formData.paymentStatus === 'COD'}
+                                        onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                                    />
+                                    <span style={{ fontWeight: '500', color: '#b45309' }}>COD</span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
 
                     <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={isSubmitting}>
                         {isSubmitting ? 'Recording...' : 'Record Sale'}
