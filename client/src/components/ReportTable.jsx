@@ -49,7 +49,19 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                                 <td style={{ padding: '0.75rem', fontWeight: '500' }}>{t.quantity}</td>
                                 {showTotal ? (
                                     <td style={{ padding: '0.75rem', fontWeight: 'bold', color: '#333' }}>
-                                        RM {(t.quantity * t.sellingPriceAtTime).toFixed(2)}
+                                        {(() => {
+                                            let price = 0;
+                                            if (t.type === 'OUT') {
+                                                price = t.sellingPriceAtTime;
+                                            } else {
+                                                price = t.purchasePriceAtTime;
+                                            }
+
+                                            if (price === undefined || price === null || isNaN(price)) {
+                                                return '-';
+                                            }
+                                            return `RM ${(t.quantity * price).toFixed(2)}`;
+                                        })()}
                                     </td>
                                 ) : (
                                     <td style={{ padding: '0.75rem', color: '#666', fontStyle: 'italic' }}>

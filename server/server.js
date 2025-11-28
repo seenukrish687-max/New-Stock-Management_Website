@@ -96,6 +96,7 @@ app.post('/api/stock-in', async (req, res) => {
             productName: product.name,
             productImage: product.imageURL,
             quantity: qty,
+            purchasePriceAtTime: product.purchasePrice,
             notes
         });
 
