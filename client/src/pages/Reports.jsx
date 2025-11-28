@@ -41,10 +41,11 @@ const Reports = () => {
         }
 
         const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
+        const totalStockOut = stockOut.reduce((sum, t) => sum + t.quantity, 0);
         const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
         const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
 
-        return { stockIn, stockOut, totalSales, totalReturns, totalStockIn };
+        return { stockIn, stockOut, totalSales, totalStockOut, totalReturns, totalStockIn };
     }, [transactions, selectedDate, filterType, selectedProductId]);
 
     // --- Monthly Report Logic ---
@@ -240,6 +241,12 @@ const Reports = () => {
                                         <div>
                                             <p style={{ color: '#666', fontSize: '0.875rem' }}>Stock In</p>
                                             <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#8b5cf6' }}>{data.totalStockIn}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ color: '#666', fontSize: '0.875rem' }}>Stock Out</p>
+                                            <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                                                {activeTab === 'daily' ? data.totalStockOut : data.totalUnitsSold}
+                                            </p>
                                         </div>
                                         <div>
                                             <p style={{ color: '#666', fontSize: '0.875rem' }}>Returns</p>
