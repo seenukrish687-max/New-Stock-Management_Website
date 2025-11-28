@@ -7,10 +7,11 @@ const ReportFilters = ({
     selectedMonth, setSelectedMonth,
     filterType, setFilterType,
     products, selectedProductId, setSelectedProductId,
+    selectedPlatform, setSelectedPlatform,
     onRefresh
 }) => {
     return (
-        <div className="card" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
+        <div className="card" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', padding: '1rem' }}>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Calendar size={18} color="#666" />
@@ -68,11 +69,31 @@ const ReportFilters = ({
                 </div>
             )}
 
+            {/* Platform Filter */}
+            {(activeTab === 'daily' || activeTab === 'monthly' || activeTab === 'product') && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <select
+                        className="input-field"
+                        style={{ width: 'auto', marginBottom: 0, padding: '0.5rem' }}
+                        value={selectedPlatform}
+                        onChange={(e) => setSelectedPlatform(e.target.value)}
+                    >
+                        <option value="All Platforms">All Platforms</option>
+                        <option value="Tiktok">Tiktok</option>
+                        <option value="Whatsapp">Whatsapp</option>
+                        <option value="Lazada">Lazada</option>
+                        <option value="Shopee">Shopee</option>
+                        <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
+                        <option value="Walk-in">Walk-in</option>
+                    </select>
+                </div>
+            )}
+
             {/* Refresh Button */}
             <button
                 onClick={onRefresh}
                 className="btn-secondary"
-                style={{ marginLeft: 'auto', padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                 title="Refresh Data"
             >
                 <RefreshCw size={18} />

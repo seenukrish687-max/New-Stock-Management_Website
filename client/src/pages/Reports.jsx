@@ -1,8 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useStock } from '../context/StockContext';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import ReportStatsCards from '../components/ReportStatsCards';
 import ReportCharts from '../components/ReportCharts';
@@ -43,9 +41,6 @@ const Reports = () => {
 
         if (selectedPlatform !== 'All Platforms') {
             stockOut = stockOut.filter(t => t.platform === selectedPlatform);
-            // Stock In doesn't usually have a platform, but Returns might. 
-            // Assuming Returns have platform, filter them. Normal Stock In (type 'IN') usually doesn't have platform.
-            // If we want to filter Returns by platform:
             stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
         }
 
@@ -218,34 +213,18 @@ const Reports = () => {
             </div>
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                <ReportFilters
-                    activeTab={activeTab}
-                    selectedDate={selectedDate} setSelectedDate={setSelectedDate}
-                    selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
-                    filterType={filterType} setFilterType={setFilterType}
-                    products={products}
-                    selectedProductId={selectedProductId}
-                    setSelectedProductId={setSelectedProductId}
-                    onRefresh={() => { }}
-                />
-
-                {/* Platform Filter */}
-                <select
-                    className="input-field"
-                    style={{ width: 'auto', minWidth: '150px' }}
-                    value={selectedPlatform}
-                    onChange={(e) => setSelectedPlatform(e.target.value)}
-                >
-                    <option value="All Platforms">All Platforms</option>
-                    <option value="Tiktok">Tiktok</option>
-                    <option value="Whatsapp">Whatsapp</option>
-                    <option value="Lazada">Lazada</option>
-                    <option value="Shopee">Shopee</option>
-                    <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
-                    <option value="Walk-in">Walk-in</option>
-                </select>
-            </div>
+            <ReportFilters
+                activeTab={activeTab}
+                selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+                selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
+                filterType={filterType} setFilterType={setFilterType}
+                products={products}
+                selectedProductId={selectedProductId}
+                setSelectedProductId={setSelectedProductId}
+                selectedPlatform={selectedPlatform}
+                setSelectedPlatform={setSelectedPlatform}
+                onRefresh={() => { }}
+            />
 
             {/* Selected Product Preview */}
             {selectedProductId && (activeTab === 'daily' || activeTab === 'monthly') && (

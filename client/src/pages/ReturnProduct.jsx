@@ -11,9 +11,6 @@ const ReturnProduct = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
-        productId: '',
-        quantity: '',
-        date: new Date().toISOString().split('T')[0],
         platform: 'Tiktok'
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,9 +25,6 @@ const ReturnProduct = () => {
             await addReturn(formData);
             showToast('Product returned successfully!', 'success');
             setFormData({
-                productId: '',
-                quantity: '',
-                date: new Date().toISOString().split('T')[0],
                 productId: '',
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
