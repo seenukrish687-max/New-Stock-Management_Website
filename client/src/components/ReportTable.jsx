@@ -11,6 +11,7 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                         <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left', color: '#666', fontSize: '0.875rem' }}>
                             {showDate && <th style={{ padding: '0.75rem' }}>Date</th>}
                             {showType && <th style={{ padding: '0.75rem' }}>Type</th>}
+                            <th style={{ padding: '0.75rem' }}>Platform</th>
                             <th style={{ padding: '0.75rem' }}>Product</th>
                             <th style={{ padding: '0.75rem' }}>Qty</th>
                             {showTotal ? <th style={{ padding: '0.75rem' }}>Total</th> : <th style={{ padding: '0.75rem' }}>Notes</th>}
@@ -25,14 +26,15 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                                         <span style={{
                                             padding: '0.25rem 0.5rem',
                                             borderRadius: '4px',
-                                            backgroundColor: t.type === 'IN' ? '#e8f5e9' : '#ffebee',
-                                            color: t.type === 'IN' ? '#2e7d32' : '#c62828',
+                                            backgroundColor: t.type === 'IN' ? '#e8f5e9' : t.type === 'RETURN' ? '#fef3c7' : '#ffebee',
+                                            color: t.type === 'IN' ? '#2e7d32' : t.type === 'RETURN' ? '#d97706' : '#c62828',
                                             fontSize: '0.75rem', fontWeight: 'bold'
                                         }}>
-                                            {t.type === 'IN' ? 'STOCK IN' : 'STOCK OUT'}
+                                            {t.type === 'IN' ? 'STOCK IN' : t.type === 'RETURN' ? 'RETURN' : 'STOCK OUT'}
                                         </span>
                                     </td>
                                 )}
+                                <td style={{ padding: '0.75rem', color: '#666' }}>{t.platform || '-'}</td>
                                 <td style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     {t.productImage && (
                                         <img
