@@ -56,6 +56,32 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
     }
 });
 
+// Update Product
+app.put('/api/products/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const product = await Product.findOne({ id });
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        // Update fields
+        Object.keys(updates).forEach(key => {
+            if (key !== 'id' && key !== '_id') { // Prevent updating immutable IDs
+                product[key] = updates[key];
+            }
+        });
+
+        await product.save();
+        res.json(product);
+    } catch (error) {
+        console.error('Error updating product:', error);
+        res.status(500).json({ error: 'Failed to update product' });
+    }
+});
+
 // Delete Product
 app.delete('/api/products/:id', async (req, res) => {
     try {

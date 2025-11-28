@@ -51,6 +51,25 @@ export const StockProvider = ({ children }) => {
         }
     };
 
+    const updateProduct = async (id, updates) => {
+        try {
+            const res = await fetch(`${API_URL}/products/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates),
+            });
+            if (!res.ok) {
+                throw new Error('Failed to update product');
+            }
+            const updatedProduct = await res.json();
+            setProducts(prev => prev.map(p => p.id === id ? updatedProduct : p));
+            return updatedProduct;
+        } catch (error) {
+            console.error("Failed to update product", error);
+            throw error;
+        }
+    };
+
     const addStockIn = async (data) => {
         try {
             const res = await fetch(`${API_URL}/stock-in`, {
@@ -156,6 +175,7 @@ export const StockProvider = ({ children }) => {
         transactions,
         loading,
         addProduct,
+        updateProduct,
         addStockIn,
         addStockOut,
         addReturn,

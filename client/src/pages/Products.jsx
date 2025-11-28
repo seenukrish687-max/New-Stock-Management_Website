@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStock } from '../context/StockContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, X, Upload, Trash2 } from 'lucide-react';
+import { Plus, X, Upload, Trash2, Edit2 } from 'lucide-react';
 import { API_URL } from '../config';
 import { getCategoryColor } from '../utils/colors';
 
 const Products = () => {
-    const { products, addProduct, deleteProduct } = useStock();
+    const { products, addProduct, deleteProduct, updateProduct } = useStock();
     const { showToast } = useToast();
     const [showForm, setShowForm] = useState(false);
     const [preview, setPreview] = useState(null);
@@ -88,6 +88,24 @@ const Products = () => {
             if (sortOption === 'stock-desc') return b.currentStock - a.currentStock;
             return 0;
         });
+
+    const [editingId, setEditingId] = useState(null);
+    const [editValue, setEditValue] = useState('');
+
+    const startEditing = (product) => {
+        setEditingId(product.id);
+        setEditValue(product.currentStock);
+    };
+
+    const saveStock = async (id) => {
+        try {
+            await updateProduct(id, { currentStock: parseInt(editValue) });
+            setEditingId(null);
+            showToast('Stock updated successfully!', 'success');
+        } catch (error) {
+            showToast('Failed to update stock', 'error');
+        }
+    };
 
     return (
         <div className="animate-fade-in">
@@ -216,32 +234,62 @@ const Products = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontWeight: 'bold', color: 'var(--color-primary-accent)' }}>RM {product.sellingPrice}</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{
-                                        fontSize: '0.875rem',
-                                        padding: '0.25rem 0.5rem',
-                                        backgroundColor: product.currentStock < 10 ? '#ffebee' : '#e8f5e9',
-                                        color: product.currentStock < 10 ? '#c62828' : '#2e7d32',
-                                        borderRadius: '4px',
-                                        fontWeight: '500'
-                                    }}>
-                                        Stock: {product.currentStock}
-                                    </span>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevent event bubbling
-                                            console.log("Delete button clicked for:", product.id);
-                                            if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                                                console.log("Confirmed delete for:", product.id);
-                                                console.log("Confirmed delete for:", product.id);
-                                                deleteProduct(product.id);
-                                                showToast('Product deleted successfully!', 'success');
-                                            }
-                                        }}
-                                        style={{ color: '#c62828', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
-                                        title="Delete Product"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        {editingId === product.id ? (
+                                            <input
+                                                type="number"
+                                                value={editValue}
+                                                onChange={(e) => setEditValue(e.target.value)}
+                                                onBlur={() => saveStock(product.id)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') saveStock(product.id);
+                                                    if (e.key === 'Escape') setEditingId(null);
+                                                }}
+                                                autoFocus
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ width: '80px', padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                                            />
+                                        ) : (
+                                            <span
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    startEditing(product);
+                                                }}
+                                                style={{
+                                                    fontSize: '0.875rem',
+                                                    padding: '0.25rem 0.5rem',
+                                                    backgroundColor: product.currentStock < 10 ? '#ffebee' : '#e8f5e9',
+                                                    color: product.currentStock < 10 ? '#c62828' : '#2e7d32',
+                                                    borderRadius: '4px',
+                                                    fontWeight: '500',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.25rem'
+                                                }}
+                                                title="Click to edit stock"
+                                            >
+                                                Stock: {product.currentStock}
+                                                <Edit2 size={12} style={{ opacity: 0.5 }} />
+                                            </span>
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent event bubbling
+                                                console.log("Delete button clicked for:", product.id);
+                                                if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                                                    console.log("Confirmed delete for:", product.id);
+                                                    console.log("Confirmed delete for:", product.id);
+                                                    deleteProduct(product.id);
+                                                    showToast('Product deleted successfully!', 'success');
+                                                }
+                                            }}
+                                            style={{ color: '#c62828', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
+                                            title="Delete Product"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
