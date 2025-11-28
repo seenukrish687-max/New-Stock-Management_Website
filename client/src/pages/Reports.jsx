@@ -218,7 +218,12 @@ const Reports = () => {
                             <>
                                 <div style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
                                     {product.imageURL ? (
-                                        <img src={product.imageURL} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <img
+                                            src={product.imageURL}
+                                            alt={product.name}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/100?text=No+Img'; }}
+                                        />
                                     ) : (
                                         <div style={{ width: '100%', height: '100%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No Img</div>
                                     )}

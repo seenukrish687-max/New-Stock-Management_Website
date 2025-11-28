@@ -38,7 +38,7 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                                 <td style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     {t.productImage && (
                                         <img
-                                            src={`${API_URL}${t.productImage}`}
+                                            src={t.productImage}
                                             alt=""
                                             style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover' }}
                                             onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/32?text=Img'; }}
