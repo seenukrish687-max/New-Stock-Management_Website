@@ -108,33 +108,88 @@ export const generateDailyReportPDF = (data, date, filterType) => {
         { label: "Stock Out Count", value: data.stockOut.length }
     ]);
 
-    // Transactions Table
-    doc.setFontSize(12);
-    doc.setTextColor(...SECONDARY_COLOR);
-    doc.text("Transaction Details", MARGIN, y);
-    y += 5;
+    const stockOutItems = data.stockOut;
+    const stockInItems = data.stockIn.filter(t => t.type === 'IN');
+    const returnItems = data.stockIn.filter(t => t.type === 'RETURN');
 
-    const tableRows = [...data.stockIn, ...data.stockOut].map(t => [
-        t.type === 'IN' ? 'STOCK IN' : t.type === 'RETURN' ? 'RETURN' : 'STOCK OUT',
-        t.platform || '-',
-        t.productName,
-        t.quantity,
-        `RM ${(t.quantity * t.sellingPriceAtTime).toFixed(2)}`,
-        t.notes || '-'
-    ]);
+    // Table 1: Stock Out Details
+    if (stockOutItems.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(...SECONDARY_COLOR);
+        doc.text("Stock Out Details", MARGIN, y);
+        y += 5;
 
-    autoTable(doc, {
-        startY: y,
-        head: [['Type', 'Platform', 'Product', 'Qty', 'Value', 'Notes']],
-        body: tableRows,
-        theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-            0: { fontStyle: 'bold' },
-            3: { halign: 'right' }
-        }
-    });
+        autoTable(doc, {
+            startY: y,
+            head: [['Platform', 'Product', 'Qty', 'Value', 'Notes']],
+            body: stockOutItems.map(t => [
+                t.platform || '-',
+                t.productName,
+                t.quantity,
+                `RM ${(t.quantity * (t.sellingPriceAtTime || 0)).toFixed(2)}`,
+                t.notes || '-'
+            ]),
+            theme: 'grid',
+            headStyles: { fillColor: PRIMARY_COLOR },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                0: { fontStyle: 'bold' },
+                3: { halign: 'right' }
+            }
+        });
+        y = doc.lastAutoTable.finalY + 15;
+    }
+
+    // Table 2: Stock In Details
+    if (stockInItems.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(...SECONDARY_COLOR);
+        doc.text("Stock In Details", MARGIN, y);
+        y += 5;
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Product', 'Qty', 'Value', 'Notes']],
+            body: stockInItems.map(t => [
+                t.productName,
+                t.quantity,
+                `RM ${(t.quantity * (t.purchasePriceAtTime || 0)).toFixed(2)}`,
+                t.notes || '-'
+            ]),
+            theme: 'grid',
+            headStyles: { fillColor: [46, 125, 50] }, // Green for Stock In
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                2: { halign: 'right' }
+            }
+        });
+        y = doc.lastAutoTable.finalY + 15;
+    }
+
+    // Table 3: Returned Products
+    if (returnItems.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(...SECONDARY_COLOR);
+        doc.text("Returned Products", MARGIN, y);
+        y += 5;
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Platform', 'Product', 'Qty', 'Notes']],
+            body: returnItems.map(t => [
+                t.platform || '-',
+                t.productName,
+                t.quantity,
+                t.notes || '-'
+            ]),
+            theme: 'grid',
+            headStyles: { fillColor: [217, 119, 6] }, // Orange for Returns
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                0: { fontStyle: 'bold' }
+            }
+        });
+    }
 
     addFooter(doc);
     doc.save(`Daily_Report_${date}.pdf`);
