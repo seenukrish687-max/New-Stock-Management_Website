@@ -10,7 +10,7 @@ const StockOut = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
-        notes: ''
+        platform: 'Tiktok'
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +32,7 @@ const StockOut = () => {
                 productId: '',
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
-                notes: ''
+                platform: 'Tiktok'
             });
             setSelectedProduct(null);
         } catch (error) {
@@ -97,14 +97,19 @@ const StockOut = () => {
                         </div>
                     </div>
 
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Notes</label>
-                    <textarea
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sales Platform</label>
+                    <select
                         className="input-field"
-                        placeholder="Optional notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        rows="3"
-                    />
+                        value={formData.platform}
+                        onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                        required
+                    >
+                        <option value="Tiktok">Tiktok</option>
+                        <option value="Whatsapp">Whatsapp</option>
+                        <option value="Lazada">Lazada</option>
+                        <option value="Shopee">Shopee</option>
+                        <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
+                    </select>
 
                     <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={isSubmitting}>
                         {isSubmitting ? 'Recording...' : 'Record Sale'}

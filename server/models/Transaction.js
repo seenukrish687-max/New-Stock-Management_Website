@@ -9,6 +9,7 @@ const transactionSchema = new mongoose.Schema({
     quantity: { type: Number, required: true },
     date: { type: String, required: true }, // YYYY-MM-DD
     notes: { type: String },
+    platform: { type: String }, // For Stock Out sales platform
     sellingPriceAtTime: { type: Number }, // For Stock Out
     purchasePriceAtTime: { type: Number }, // For Stock In (optional)
     timestamp: { type: Date, default: Date.now }
