@@ -1,7 +1,7 @@
 import React from 'react';
 import { API_URL } from '../config';
 
-const ReportTable = ({ transactions, title, showType = true, showDate = false, showTotal = false }) => {
+const ReportTable = ({ transactions, title, showType = true, showDate = false, showTotal = false, products = [] }) => {
     return (
         <div className="card" style={{ marginBottom: '2rem' }}>
             <h3 style={{ marginBottom: '1rem', fontWeight: 'bold', color: '#333' }}>{title}</h3>
@@ -55,6 +55,13 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                                                 price = t.sellingPriceAtTime;
                                             } else {
                                                 price = t.purchasePriceAtTime;
+                                                // Fallback to current product price if historical price is missing
+                                                if ((price === undefined || price === null || isNaN(price)) && products) {
+                                                    const product = products.find(p => p.id === t.productId);
+                                                    if (product) {
+                                                        price = product.purchasePrice;
+                                                    }
+                                                }
                                             }
 
                                             if (price === undefined || price === null || isNaN(price)) {

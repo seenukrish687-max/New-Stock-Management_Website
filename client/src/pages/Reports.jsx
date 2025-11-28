@@ -257,6 +257,7 @@ const Reports = () => {
                         title="Daily Transactions"
                         transactions={[...dailyData.stockIn, ...dailyData.stockOut]}
                         showTotal={true}
+                        products={products}
                     />
                 </div>
             )}
@@ -271,11 +272,13 @@ const Reports = () => {
                             transactions={monthlyData.stockOut}
                             showTotal={true}
                             showDate={true}
+                            products={products}
                         />
                         <ReportTable
                             title="Stock In History"
                             transactions={monthlyData.stockIn}
                             showDate={true}
+                            products={products}
                         />
                     </div>
                 </div>
@@ -320,6 +323,7 @@ const Reports = () => {
                                 transactions={productData.transactions}
                                 showDate={true}
                                 showType={true}
+                                products={products}
                             />
                         </>
                     )}
