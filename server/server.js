@@ -141,10 +141,40 @@ app.post('/api/stock-out', async (req, res) => {
     }
 });
 
+// Return Product
+app.post('/api/return', async (req, res) => {
+    try {
+        const { productId, quantity, date, notes } = req.body;
+        const product = await Product.findOne({ id: productId });
+
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+
+        const qty = parseInt(quantity);
+        product.currentStock += qty;
+        await product.save();
+
+        const transaction = new Transaction({
+            id: Date.now().toString(),
+            type: 'RETURN',
+            date,
+            productId,
+            productName: product.name,
+            productImage: product.imageURL,
+            quantity: qty,
+            notes
+        });
+
+        await transaction.save();
+        res.json(transaction);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to process return' });
+    }
+});
+
 // Get Reports
 app.get('/api/transactions', async (req, res) => {
     try {
-        const stockIn = await Transaction.find({ type: 'IN' });
+        const stockIn = await Transaction.find({ type: { $in: ['IN', 'RETURN'] } });
         const stockOut = await Transaction.find({ type: 'OUT' });
         res.json({ stockIn, stockOut });
     } catch (error) {

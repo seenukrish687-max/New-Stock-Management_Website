@@ -25,31 +25,52 @@ const Reports = () => {
         let stockIn = transactions.stockIn.filter(t => t.date === selectedDate);
         let stockOut = transactions.stockOut.filter(t => t.date === selectedDate);
 
-        if (filterType === 'IN') stockOut = [];
+        if (filterType === 'IN') {
+            stockOut = [];
+            stockIn = stockIn.filter(t => t.type === 'IN');
+        }
         if (filterType === 'OUT') stockIn = [];
         if (filterType === 'RETURN') {
             stockIn = stockIn.filter(t => t.type === 'RETURN');
-            stockOut = stockOut.filter(t => t.type === 'RETURN');
+            stockOut = [];
+        }
+
+        if (selectedProductId) {
+            stockIn = stockIn.filter(t => t.productId === selectedProductId);
+            stockOut = stockOut.filter(t => t.productId === selectedProductId);
         }
 
         const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
-        return { stockIn, stockOut, totalSales };
-    }, [transactions, selectedDate, filterType]);
+        const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
+        const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
+
+        return { stockIn, stockOut, totalSales, totalReturns, totalStockIn };
+    }, [transactions, selectedDate, filterType, selectedProductId]);
 
     // --- Monthly Report Logic ---
     const monthlyData = useMemo(() => {
         let stockOut = transactions.stockOut.filter(t => t.date.startsWith(selectedMonth));
         let stockIn = transactions.stockIn.filter(t => t.date.startsWith(selectedMonth));
 
-        if (filterType === 'IN') stockOut = [];
+        if (filterType === 'IN') {
+            stockOut = [];
+            stockIn = stockIn.filter(t => t.type === 'IN');
+        }
         if (filterType === 'OUT') stockIn = [];
         if (filterType === 'RETURN') {
             stockIn = stockIn.filter(t => t.type === 'RETURN');
-            stockOut = stockOut.filter(t => t.type === 'RETURN');
+            stockOut = [];
+        }
+
+        if (selectedProductId) {
+            stockIn = stockIn.filter(t => t.productId === selectedProductId);
+            stockOut = stockOut.filter(t => t.productId === selectedProductId);
         }
 
         const totalRevenue = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
         const totalUnitsSold = stockOut.reduce((sum, t) => sum + t.quantity, 0);
+        const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
+        const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
 
         let totalCost = 0;
         const productSales = {};
@@ -68,8 +89,8 @@ const Reports = () => {
             .slice(0, 5)
             .map(([name, quantity]) => ({ name, quantity }));
 
-        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn };
-    }, [transactions, products, selectedMonth, filterType]);
+        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn };
+    }, [transactions, products, selectedMonth, filterType, selectedProductId]);
 
     // --- Product Report Logic ---
     const productData = useMemo(() => {
@@ -180,8 +201,52 @@ const Reports = () => {
                 selectedDate={selectedDate} setSelectedDate={setSelectedDate}
                 selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
                 filterType={filterType} setFilterType={setFilterType}
+                products={products}
+                selectedProductId={selectedProductId}
+                setSelectedProductId={setSelectedProductId}
                 onRefresh={() => { }}
             />
+
+            {/* Selected Product Preview */}
+            {selectedProductId && (activeTab === 'daily' || activeTab === 'monthly') && (
+                <div className="card" style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                    {(() => {
+                        const product = products.find(p => p.id === selectedProductId);
+                        if (!product) return null;
+                        const data = activeTab === 'daily' ? dailyData : monthlyData;
+                        return (
+                            <>
+                                <div style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
+                                    {product.imageURL ? (
+                                        <img src={product.imageURL} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <div style={{ width: '100%', height: '100%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No Img</div>
+                                    )}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{product.name}</h3>
+                                    <div style={{ display: 'flex', gap: '2rem' }}>
+                                        <div>
+                                            <p style={{ color: '#666', fontSize: '0.875rem' }}>Sales</p>
+                                            <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>
+                                                {activeTab === 'daily' ? `RM ${data.totalSales.toFixed(2)}` : `RM ${data.totalRevenue.toFixed(2)}`}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p style={{ color: '#666', fontSize: '0.875rem' }}>Stock In</p>
+                                            <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#8b5cf6' }}>{data.totalStockIn}</p>
+                                        </div>
+                                        <div>
+                                            <p style={{ color: '#666', fontSize: '0.875rem' }}>Returns</p>
+                                            <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>{data.totalReturns}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+            )}
 
             {/* Content */}
             {activeTab === 'daily' && (

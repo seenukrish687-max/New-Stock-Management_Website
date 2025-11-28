@@ -6,12 +6,12 @@ const ReportFilters = ({
     selectedDate, setSelectedDate,
     selectedMonth, setSelectedMonth,
     filterType, setFilterType,
+    products, selectedProductId, setSelectedProductId,
     onRefresh
 }) => {
     return (
         <div className="card" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', padding: '1rem' }}>
 
-            {/* Date/Month Selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Calendar size={18} color="#666" />
                 {activeTab === 'daily' ? (
@@ -30,10 +30,25 @@ const ReportFilters = ({
                         value={selectedMonth}
                         onChange={(e) => setSelectedMonth(e.target.value)}
                     />
-                ) : (
-                    <span style={{ color: '#666', fontWeight: '500' }}>Select a product below</span>
-                )}
+                ) : null}
             </div>
+
+            {/* Product Selector */}
+            {(activeTab === 'daily' || activeTab === 'monthly') && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <select
+                        className="input-field"
+                        style={{ width: 'auto', marginBottom: 0, padding: '0.5rem', maxWidth: '200px' }}
+                        value={selectedProductId}
+                        onChange={(e) => setSelectedProductId(e.target.value)}
+                    >
+                        <option value="">All Products</option>
+                        {products && products.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             {/* Type Filter */}
             {(activeTab === 'daily' || activeTab === 'monthly') && (

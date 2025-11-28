@@ -89,6 +89,25 @@ export const StockProvider = ({ children }) => {
         }
     };
 
+    const addReturn = async (data) => {
+        try {
+            const res = await fetch(`${API_URL}/return`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const transaction = await res.json();
+            // Returns are treated as stock in for now in terms of state, or we can separate them if we change state structure
+            // Based on backend change, they come in stockIn array from /transactions
+            setTransactions(prev => ({ ...prev, stockIn: [...prev.stockIn, transaction] }));
+            await fetchProducts();
+            return transaction;
+        } catch (error) {
+            console.error("Failed to add return", error);
+            throw error;
+        }
+    };
+
     const resetData = async () => {
         try {
             const res = await fetch(`${API_URL}/reset`, {
@@ -139,6 +158,7 @@ export const StockProvider = ({ children }) => {
         addProduct,
         addStockIn,
         addStockOut,
+        addReturn,
         resetData,
         deleteProduct
     };

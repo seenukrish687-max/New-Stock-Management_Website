@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { RotateCcw } from 'lucide-react';
 
 const ReturnProduct = () => {
-    const { products, addStockIn } = useStock();
+    const { products, addReturn } = useStock();
     const { showToast } = useToast();
     const [formData, setFormData] = useState({
         productId: '',
@@ -21,14 +21,8 @@ const ReturnProduct = () => {
         if (!formData.productId) return showToast('Please select a product', 'error');
 
         setIsSubmitting(true);
-        // Prepend "RETURN: " to notes to distinguish from normal stock in
-        const returnData = {
-            ...formData,
-            notes: `RETURN: ${formData.notes}`
-        };
-
         try {
-            await addStockIn(returnData);
+            await addReturn(formData);
             showToast('Product returned successfully!', 'success');
             setFormData({
                 productId: '',
