@@ -131,7 +131,7 @@ const aggregateData = (data, type) => {
     }));
 };
 
-export const generateDailyReportPDF = (data, date, filterType) => {
+export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms') => {
     const doc = new jsPDF();
     let y = addHeader(doc, "Daily Sales Report");
 
@@ -139,8 +139,13 @@ export const generateDailyReportPDF = (data, date, filterType) => {
     doc.setFontSize(12);
     doc.setTextColor(...TEXT_COLOR);
     doc.text(`Report Date: ${date}`, MARGIN, y);
-    if (filterType !== 'ALL') {
-        doc.text(`Filter: ${filterType}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+
+    let filterText = '';
+    if (filterType !== 'ALL') filterText += `Type: ${filterType} `;
+    if (platformFilter !== 'All Platforms') filterText += `Platform: ${platformFilter}`;
+
+    if (filterText) {
+        doc.text(filterText, PAGE_WIDTH - MARGIN, y, { align: 'right' });
     }
     y += 10;
 
@@ -238,13 +243,17 @@ export const generateDailyReportPDF = (data, date, filterType) => {
     doc.save(`Daily_Report_${date}.pdf`);
 };
 
-export const generateMonthlyReportPDF = (data, month) => {
+export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Platforms') => {
     const doc = new jsPDF();
     let y = addHeader(doc, "Monthly Sales Report");
 
     doc.setFontSize(12);
     doc.setTextColor(...TEXT_COLOR);
     doc.text(`Report Month: ${month}`, MARGIN, y);
+
+    if (platformFilter !== 'All Platforms') {
+        doc.text(`Platform: ${platformFilter}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+    }
     y += 10;
 
     // Summary Box
@@ -321,7 +330,7 @@ export const generateMonthlyReportPDF = (data, month) => {
     doc.save(`Monthly_Report_${month}.pdf`);
 };
 
-export const generateProductReportPDF = (data, product) => {
+export const generateProductReportPDF = (data, product, platformFilter = 'All Platforms') => {
     const doc = new jsPDF();
     let y = addHeader(doc, "Product Performance Report");
 
@@ -330,6 +339,10 @@ export const generateProductReportPDF = (data, product) => {
     doc.text(`Product: ${product.name}`, MARGIN, y);
     doc.setFontSize(10);
     doc.text(`Category: ${product.category} | Price: RM ${product.sellingPrice}`, MARGIN, y + 6);
+
+    if (platformFilter !== 'All Platforms') {
+        doc.text(`Platform: ${platformFilter}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+    }
     y += 15;
 
     // Summary Box
@@ -373,5 +386,3 @@ export const generateProductReportPDF = (data, product) => {
     addFooter(doc);
     doc.save(`Product_Report_${product.name.replace(/\s+/g, '_')}.pdf`);
 };
-
-

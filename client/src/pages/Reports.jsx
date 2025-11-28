@@ -19,6 +19,7 @@ const Reports = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
     const [filterType, setFilterType] = useState('ALL');
     const [selectedProductId, setSelectedProductId] = useState('');
+    const [selectedPlatform, setSelectedPlatform] = useState('All Platforms');
 
     // --- Daily Report Logic ---
     const dailyData = useMemo(() => {
@@ -40,13 +41,21 @@ const Reports = () => {
             stockOut = stockOut.filter(t => t.productId === selectedProductId);
         }
 
+        if (selectedPlatform !== 'All Platforms') {
+            stockOut = stockOut.filter(t => t.platform === selectedPlatform);
+            // Stock In doesn't usually have a platform, but Returns might. 
+            // Assuming Returns have platform, filter them. Normal Stock In (type 'IN') usually doesn't have platform.
+            // If we want to filter Returns by platform:
+            stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
+        }
+
         const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
         const totalStockOut = stockOut.reduce((sum, t) => sum + t.quantity, 0);
         const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
         const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
 
         return { stockIn, stockOut, totalSales, totalStockOut, totalReturns, totalStockIn };
-    }, [transactions, selectedDate, filterType, selectedProductId]);
+    }, [transactions, selectedDate, filterType, selectedProductId, selectedPlatform]);
 
     // --- Monthly Report Logic ---
     const monthlyData = useMemo(() => {
@@ -66,6 +75,11 @@ const Reports = () => {
         if (selectedProductId) {
             stockIn = stockIn.filter(t => t.productId === selectedProductId);
             stockOut = stockOut.filter(t => t.productId === selectedProductId);
+        }
+
+        if (selectedPlatform !== 'All Platforms') {
+            stockOut = stockOut.filter(t => t.platform === selectedPlatform);
+            stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
         }
 
         const totalRevenue = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
@@ -91,23 +105,30 @@ const Reports = () => {
             .map(([name, quantity]) => ({ name, quantity }));
 
         return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn };
-    }, [transactions, products, selectedMonth, filterType, selectedProductId]);
+    }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform]);
 
     // --- Product Report Logic ---
     const productData = useMemo(() => {
         if (!selectedProductId) return { transactions: [], totalIn: 0, totalOut: 0 };
         const pStockIn = transactions.stockIn.filter(t => t.productId === selectedProductId);
         const pStockOut = transactions.stockOut.filter(t => t.productId === selectedProductId);
-        const allTrans = [...pStockIn, ...pStockOut].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let allTrans = [...pStockIn, ...pStockOut].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (selectedPlatform !== 'All Platforms') {
+            allTrans = allTrans.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
+        }
+
         const totalIn = pStockIn.reduce((sum, t) => sum + t.quantity, 0);
-        const totalOut = pStockOut.reduce((sum, t) => sum + t.quantity, 0);
+        const totalOut = pStockOut.filter(t => selectedPlatform === 'All Platforms' || t.platform === selectedPlatform).reduce((sum, t) => sum + t.quantity, 0);
+
         return { transactions: allTrans, totalIn, totalOut };
-    }, [transactions, selectedProductId]);
+    }, [transactions, selectedProductId, selectedPlatform]);
 
     // --- PDF Export Logic ---
     const handleExportDaily = () => {
         try {
-            generateDailyReportPDF(dailyData, selectedDate, filterType);
+            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform);
         } catch (error) {
             console.error("PDF Export Failed:", error);
             showToast("Failed to export PDF: " + error.message, 'error');
@@ -116,7 +137,7 @@ const Reports = () => {
 
     const handleExportMonthly = () => {
         try {
-            generateMonthlyReportPDF(monthlyData, selectedMonth);
+            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform);
         } catch (error) {
             console.error("PDF Export Failed:", error);
             showToast("Failed to export PDF: " + error.message, 'error');
@@ -128,7 +149,7 @@ const Reports = () => {
         const product = products.find(p => p.id === selectedProductId);
         if (product) {
             try {
-                generateProductReportPDF(productData, product);
+                generateProductReportPDF(productData, product, selectedPlatform);
             } catch (error) {
                 console.error("PDF Export Failed:", error);
                 showToast("Failed to export PDF: " + error.message, 'error');
@@ -197,16 +218,34 @@ const Reports = () => {
             </div>
 
             {/* Filters */}
-            <ReportFilters
-                activeTab={activeTab}
-                selectedDate={selectedDate} setSelectedDate={setSelectedDate}
-                selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
-                filterType={filterType} setFilterType={setFilterType}
-                products={products}
-                selectedProductId={selectedProductId}
-                setSelectedProductId={setSelectedProductId}
-                onRefresh={() => { }}
-            />
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                <ReportFilters
+                    activeTab={activeTab}
+                    selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+                    selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
+                    filterType={filterType} setFilterType={setFilterType}
+                    products={products}
+                    selectedProductId={selectedProductId}
+                    setSelectedProductId={setSelectedProductId}
+                    onRefresh={() => { }}
+                />
+
+                {/* Platform Filter */}
+                <select
+                    className="input-field"
+                    style={{ width: 'auto', minWidth: '150px' }}
+                    value={selectedPlatform}
+                    onChange={(e) => setSelectedPlatform(e.target.value)}
+                >
+                    <option value="All Platforms">All Platforms</option>
+                    <option value="Tiktok">Tiktok</option>
+                    <option value="Whatsapp">Whatsapp</option>
+                    <option value="Lazada">Lazada</option>
+                    <option value="Shopee">Shopee</option>
+                    <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
+                    <option value="Walk-in">Walk-in</option>
+                </select>
+            </div>
 
             {/* Selected Product Preview */}
             {selectedProductId && (activeTab === 'daily' || activeTab === 'monthly') && (
