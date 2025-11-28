@@ -216,9 +216,13 @@ app.get('/api/transactions', async (req, res) => {
 // Reset Data
 app.delete('/api/reset', async (req, res) => {
     try {
-        await Product.deleteMany({});
+        // Reset all products: set currentStock and openingStock to 0
+        await Product.updateMany({}, { $set: { currentStock: 0, openingStock: 0 } });
+
+        // Delete all transactions
         await Transaction.deleteMany({});
-        console.log('Database cleared');
+
+        console.log('Database reset: Stocks cleared, Transactions deleted');
         res.json({ message: 'Data reset successfully' });
     } catch (error) {
         console.error('Error resetting data:', error);
