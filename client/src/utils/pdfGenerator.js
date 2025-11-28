@@ -88,6 +88,49 @@ const addSummaryBox = (doc, startY, items) => {
     return startY + boxHeight + 10;
 };
 
+// Helper to aggregate data
+const aggregateData = (data, type) => {
+    const aggregated = {};
+
+    data.forEach(item => {
+        let key;
+        if (type === 'IN') {
+            key = item.productName;
+        } else {
+            key = `${item.platform || '-'}_${item.productName}`;
+        }
+
+        if (!aggregated[key]) {
+            aggregated[key] = {
+                ...item,
+                quantity: 0,
+                totalValue: 0,
+                notes: []
+            };
+        }
+
+        aggregated[key].quantity += item.quantity;
+
+        let value = 0;
+        if (type === 'OUT') {
+            value = item.quantity * (item.sellingPriceAtTime || 0);
+        } else if (type === 'IN') {
+            value = item.quantity * (item.purchasePriceAtTime || 0);
+        }
+
+        aggregated[key].totalValue += value;
+
+        if (item.notes) {
+            aggregated[key].notes.push(item.notes);
+        }
+    });
+
+    return Object.values(aggregated).map(item => ({
+        ...item,
+        notes: [...new Set(item.notes)].join(', ')
+    }));
+};
+
 export const generateDailyReportPDF = (data, date, filterType) => {
     const doc = new jsPDF();
     let y = addHeader(doc, "Daily Sales Report");
@@ -108,9 +151,9 @@ export const generateDailyReportPDF = (data, date, filterType) => {
         { label: "Stock Out Count", value: data.stockOut.length }
     ]);
 
-    const stockOutItems = data.stockOut;
-    const stockInItems = data.stockIn.filter(t => t.type === 'IN');
-    const returnItems = data.stockIn.filter(t => t.type === 'RETURN');
+    const stockOutItems = aggregateData(data.stockOut, 'OUT');
+    const stockInItems = aggregateData(data.stockIn.filter(t => t.type === 'IN'), 'IN');
+    const returnItems = aggregateData(data.stockIn.filter(t => t.type === 'RETURN'), 'RETURN');
 
     // Table 1: Stock Out Details
     if (stockOutItems.length > 0) {
@@ -126,7 +169,7 @@ export const generateDailyReportPDF = (data, date, filterType) => {
                 t.platform || '-',
                 t.productName,
                 t.quantity,
-                `RM ${(t.quantity * (t.sellingPriceAtTime || 0)).toFixed(2)}`,
+                `RM ${t.totalValue.toFixed(2)}`,
                 t.notes || '-'
             ]),
             theme: 'grid',
@@ -153,7 +196,7 @@ export const generateDailyReportPDF = (data, date, filterType) => {
             body: stockInItems.map(t => [
                 t.productName,
                 t.quantity,
-                `RM ${(t.quantity * (t.purchasePriceAtTime || 0)).toFixed(2)}`,
+                `RM ${t.totalValue.toFixed(2)}`,
                 t.notes || '-'
             ]),
             theme: 'grid',
