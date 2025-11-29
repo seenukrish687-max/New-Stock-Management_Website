@@ -72,6 +72,7 @@ const StockOut = () => {
                             fontWeight: 'bold',
                             textAlign: 'center'
                         }}>
+                            <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{selectedProduct.name}</div>
                             Available Stock: {selectedProduct.currentStock}
                         </div>
                     )}

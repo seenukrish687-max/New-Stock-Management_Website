@@ -12,6 +12,7 @@ const StockIn = () => {
         date: new Date().toISOString().split('T')[0],
         notes: ''
     });
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -29,6 +30,7 @@ const StockIn = () => {
             date: new Date().toISOString().split('T')[0],
             notes: ''
         });
+        setSelectedProduct(null);
     };
 
     return (
@@ -39,9 +41,27 @@ const StockIn = () => {
                 <form onSubmit={handleSubmit}>
                     <ProductSelectionGrid
                         products={products}
-                        onSelect={(p) => setFormData({ ...formData, productId: p.id })}
+                        onSelect={(p) => {
+                            setFormData({ ...formData, productId: p.id });
+                            setSelectedProduct(p);
+                        }}
                         selectedProductId={formData.productId}
                     />
+
+                    {selectedProduct && (
+                        <div style={{
+                            marginBottom: '1rem',
+                            padding: '0.75rem',
+                            backgroundColor: '#e8f5e9',
+                            color: '#2e7d32',
+                            borderRadius: '8px',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            textAlign: 'center'
+                        }}>
+                            Selected Product: {selectedProduct.name}
+                        </div>
+                    )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <div>
