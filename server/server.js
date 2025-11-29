@@ -4,7 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const connectDB = require('./config/db');
-// const { storage } = require('./config/cloudinary'); // Removed for Dropbox
+const { storage } = require('./config/cloudinary');
 const Product = require('./models/Product');
 const Transaction = require('./models/Transaction');
 
@@ -17,9 +17,8 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Multer setup for memory storage (Dropbox needs buffer)
-const upload = multer({ storage: multer.memoryStorage() });
-const { uploadToDropbox } = require('./config/dropbox');
+// Multer setup for Cloudinary
+const upload = multer({ storage: storage });
 
 // --- ROUTES ---
 
@@ -37,13 +36,6 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/products', upload.single('image'), async (req, res) => {
     try {
         const { name, category, purchasePrice, sellingPrice, openingStock } = req.body;
-        let imageURL = null;
-
-        if (req.file) {
-            // Generate a unique filename
-            const fileName = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
-            imageURL = await uploadToDropbox(req.file.buffer, fileName);
-        }
 
         const newProduct = new Product({
             id: Date.now().toString(),
@@ -53,7 +45,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
             sellingPrice: parseFloat(sellingPrice),
             openingStock: parseInt(openingStock),
             currentStock: parseInt(openingStock),
-            imageURL: imageURL
+            imageURL: req.file ? req.file.path : null // Cloudinary URL
         });
 
         await newProduct.save();
