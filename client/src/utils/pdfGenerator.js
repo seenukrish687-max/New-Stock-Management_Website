@@ -283,6 +283,62 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         y = doc.lastAutoTable.finalY + 15;
     }
 
+    // --- Product Performance Breakdown ---
+    // Aggregate data by product
+    const productStats = {};
+
+    // Process Stock Out (Sales)
+    data.stockOut.forEach(t => {
+        if (!productStats[t.productName]) {
+            productStats[t.productName] = { salesQty: 0, salesValue: 0, stockInQty: 0, returnQty: 0 };
+        }
+        productStats[t.productName].salesQty += t.quantity;
+        productStats[t.productName].salesValue += (t.quantity * t.sellingPriceAtTime);
+    });
+
+    // Process Stock In & Returns
+    data.stockIn.forEach(t => {
+        if (!productStats[t.productName]) {
+            productStats[t.productName] = { salesQty: 0, salesValue: 0, stockInQty: 0, returnQty: 0 };
+        }
+        if (t.type === 'IN') {
+            productStats[t.productName].stockInQty += t.quantity;
+        } else if (t.type === 'RETURN') {
+            productStats[t.productName].returnQty += t.quantity;
+        }
+    });
+
+    const productBreakdown = Object.entries(productStats).map(([name, stats]) => [
+        name,
+        stats.salesQty,
+        `RM ${stats.salesValue.toFixed(2)}`,
+        stats.stockInQty,
+        stats.returnQty
+    ]).sort((a, b) => b[1] - a[1]); // Sort by Sales Qty descending
+
+    if (productBreakdown.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(...SECONDARY_COLOR);
+        doc.text("Product Performance Breakdown", MARGIN, y);
+        y += 5;
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Product Name', 'Sales (Qty)', 'Sales (Value)', 'Stock In (Qty)', 'Returned (Qty)']],
+            body: productBreakdown,
+            theme: 'grid',
+            headStyles: { fillColor: [60, 60, 60] }, // Dark gray header
+            columnStyles: {
+                1: { halign: 'center' },
+                2: { halign: 'right' },
+                3: { halign: 'center' },
+                4: { halign: 'center', textColor: [200, 0, 0] } // Red text for returns
+            }
+        });
+
+        y = doc.lastAutoTable.finalY + 15;
+    }
+
     // Sales List
     doc.setFontSize(12);
     doc.setTextColor(...SECONDARY_COLOR);
