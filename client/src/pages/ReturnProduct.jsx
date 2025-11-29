@@ -11,7 +11,8 @@ const ReturnProduct = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
-        platform: 'Tiktok'
+        platform: 'Tiktok',
+        notes: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +29,8 @@ const ReturnProduct = () => {
                 productId: '',
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
-                platform: 'Tiktok'
+                platform: 'Tiktok',
+                notes: ''
             });
         } catch (error) {
             showToast('Failed to return product', 'error');
@@ -92,6 +94,16 @@ const ReturnProduct = () => {
                         <option value="Shopee">Shopee</option>
                         <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
                     </select>
+
+                    <label style={{ display: 'block', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>Notes (Optional)</label>
+                    <textarea
+                        className="input-field"
+                        placeholder="Reason for return (e.g., Damaged, Wrong Item)"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows="3"
+                        style={{ resize: 'vertical' }}
+                    />
 
                     <button type="submit" className="btn-primary" style={{ width: '100%', backgroundColor: '#ef4444' }} disabled={isSubmitting}>
                         {isSubmitting ? 'Processing Return...' : 'Confirm Return'}
