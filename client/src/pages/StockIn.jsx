@@ -52,8 +52,8 @@ const StockIn = () => {
                         <div style={{
                             marginBottom: '1rem',
                             padding: '0.75rem',
-                            backgroundColor: '#e8f5e9',
-                            color: '#2e7d32',
+                            backgroundColor: selectedProduct.currentStock < 10 ? '#ffebee' : '#e8f5e9',
+                            color: selectedProduct.currentStock < 10 ? '#c62828' : '#2e7d32',
                             borderRadius: '8px',
                             fontSize: '1.1rem',
                             fontWeight: 'bold',
@@ -61,6 +61,11 @@ const StockIn = () => {
                         }}>
                             <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{selectedProduct.name}</div>
                             Available Stock: {selectedProduct.currentStock}
+                            {selectedProduct.currentStock < 10 && (
+                                <div style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '1rem' }}>
+                                    ⚠️ Low Stock Alert
+                                </div>
+                            )}
                         </div>
                     )}
 

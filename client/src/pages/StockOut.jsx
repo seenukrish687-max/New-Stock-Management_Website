@@ -74,6 +74,11 @@ const StockOut = () => {
                         }}>
                             <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{selectedProduct.name}</div>
                             Available Stock: {selectedProduct.currentStock}
+                            {selectedProduct.currentStock < 10 && (
+                                <div style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '1rem' }}>
+                                    ⚠️ Low Stock Alert
+                                </div>
+                            )}
                         </div>
                     )}
 
