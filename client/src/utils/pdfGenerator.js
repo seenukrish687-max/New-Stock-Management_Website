@@ -281,6 +281,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
 
     // --- Table 1: Total separate all product sales ---
     doc.setFontSize(12);
+    doc.setTextColor(33, 150, 243); // Blue
     doc.text("Total separate all product sales", MARGIN, y);
     y += 10;
 
@@ -296,7 +297,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        headStyles: { fillColor: [33, 150, 243], textColor: [255, 255, 255], fontStyle: 'bold' }, // Blue
         columnStyles: {
             0: { cellWidth: 80 },
             1: { cellWidth: 40, halign: 'center' },
@@ -307,6 +308,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
     y = doc.lastAutoTable.finalY + 20;
 
     // --- Table 2: Total separate all product stock in ---
+    doc.setTextColor(76, 175, 80); // Green
     doc.text("Total separate all product stock in", MARGIN, y);
     y += 10;
 
@@ -322,7 +324,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        headStyles: { fillColor: [76, 175, 80], textColor: [255, 255, 255], fontStyle: 'bold' }, // Green
         columnStyles: {
             0: { cellWidth: 80 },
             1: { cellWidth: 40, halign: 'center' },
@@ -333,6 +335,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
     y = doc.lastAutoTable.finalY + 20;
 
     // --- Table 3: Total separate all product Return ---
+    doc.setTextColor(244, 67, 54); // Red
     doc.text("Total separate all product Return", MARGIN, y);
     y += 10;
 
@@ -348,7 +351,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        headStyles: { fillColor: [244, 67, 54], textColor: [255, 255, 255], fontStyle: 'bold' }, // Red
         columnStyles: {
             0: { cellWidth: 80 },
             1: { cellWidth: 40, halign: 'center' },
@@ -393,7 +396,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
 
     // --- Table 1: Total Sales (Stock Out) ---
     doc.setFontSize(12);
-    doc.setTextColor(...SECONDARY_COLOR);
+    doc.setTextColor(33, 150, 243); // Blue
     doc.text("Total Sales", MARGIN, y);
     y += 5;
 
@@ -408,7 +411,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: [33, 150, 243], textColor: [255, 255, 255], fontStyle: 'bold' }, // Blue
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
@@ -418,6 +421,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
     y = doc.lastAutoTable.finalY + 15;
 
     // --- Table 2: Total Stock In ---
+    doc.setTextColor(76, 175, 80); // Green
     doc.text("Total Stock In", MARGIN, y);
     y += 5;
 
@@ -432,7 +436,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [46, 125, 50], textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: [76, 175, 80], textColor: [255, 255, 255], fontStyle: 'bold' }, // Green
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
@@ -442,6 +446,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
     y = doc.lastAutoTable.finalY + 15;
 
     // --- Table 3: Total Return ---
+    doc.setTextColor(244, 67, 54); // Red
     doc.text("Total Return", MARGIN, y);
     y += 5;
 
@@ -456,7 +461,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [217, 119, 6], textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: [244, 67, 54], textColor: [255, 255, 255], fontStyle: 'bold' }, // Red
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
