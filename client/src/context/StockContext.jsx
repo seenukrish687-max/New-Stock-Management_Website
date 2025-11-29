@@ -53,10 +53,14 @@ export const StockProvider = ({ children }) => {
 
     const updateProduct = async (id, updates) => {
         try {
+            const isFormData = updates instanceof FormData;
+            const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
+            const body = isFormData ? updates : JSON.stringify(updates);
+
             const res = await fetch(`${API_URL}/products/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
+                headers: headers,
+                body: body,
             });
             if (!res.ok) {
                 throw new Error('Failed to update product');

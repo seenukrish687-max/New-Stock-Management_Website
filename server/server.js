@@ -57,7 +57,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
 });
 
 // Update Product
-app.put('/api/products/:id', async (req, res) => {
+app.put('/api/products/:id', upload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -69,10 +69,21 @@ app.put('/api/products/:id', async (req, res) => {
 
         // Update fields
         Object.keys(updates).forEach(key => {
-            if (key !== 'id' && key !== '_id') { // Prevent updating immutable IDs
-                product[key] = updates[key];
+            if (key !== 'id' && key !== '_id' && key !== 'image') { // Prevent updating immutable IDs and handle image separately
+                if (['purchasePrice', 'sellingPrice'].includes(key)) {
+                    product[key] = parseFloat(updates[key]);
+                } else if (['openingStock', 'currentStock'].includes(key)) {
+                    product[key] = parseInt(updates[key]);
+                } else {
+                    product[key] = updates[key];
+                }
             }
         });
+
+        // Handle Image Update
+        if (req.file) {
+            product.imageURL = req.file.path;
+        }
 
         await product.save();
         res.json(product);

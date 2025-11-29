@@ -12,6 +12,7 @@ const Products = () => {
     const { showToast } = useToast();
     const [showForm, setShowForm] = useState(false);
     const [preview, setPreview] = useState(null);
+    const [editingProduct, setEditingProduct] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         category: '',
@@ -50,13 +51,21 @@ const Products = () => {
 
         const data = new FormData();
         Object.keys(formData).forEach(key => {
-            data.append(key, formData[key]);
+            if (formData[key] !== null) {
+                data.append(key, formData[key]);
+            }
         });
 
         try {
-            await addProduct(data);
-            showToast('Product added successfully!', 'success');
+            if (editingProduct) {
+                await updateProduct(editingProduct.id, data);
+                showToast('Product updated successfully!', 'success');
+            } else {
+                await addProduct(data);
+                showToast('Product added successfully!', 'success');
+            }
             setShowForm(false);
+            setEditingProduct(null);
             setFormData({
                 name: '',
                 category: '',
@@ -67,10 +76,24 @@ const Products = () => {
             });
             setPreview(null);
         } catch (error) {
-            showToast('Failed to add product', 'error');
+            showToast(editingProduct ? 'Failed to update product' : 'Failed to add product', 'error');
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleEdit = (product) => {
+        setEditingProduct(product);
+        setFormData({
+            name: product.name,
+            category: product.category,
+            purchasePrice: product.purchasePrice,
+            sellingPrice: product.sellingPrice,
+            openingStock: product.openingStock, // Note: This might not be editable in backend logic if we only want to edit name/image, but keeping for now
+            image: null // Reset image input
+        });
+        setPreview(product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_URL}${product.imageURL}`) : null);
+        setShowForm(true);
     };
 
     const handleProductReport = (product) => {
@@ -176,8 +199,8 @@ const Products = () => {
                     }}>
                         <div className="card" style={{ width: '500px', maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto', margin: 'auto' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Add New Product</h3>
-                                <button onClick={() => setShowForm(false)} style={{ background: 'none', color: '#666' }}><X size={24} /></button>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
+                                <button onClick={() => { setShowForm(false); setEditingProduct(null); }} style={{ background: 'none', color: '#666' }}><X size={24} /></button>
                             </div>
 
                             <form onSubmit={handleSubmit} action="javascript:void(0);">
@@ -215,7 +238,7 @@ const Products = () => {
                                 <input className="input-field" type="number" name="openingStock" placeholder="Opening Stock" value={formData.openingStock} onChange={handleInputChange} required />
 
                                 <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={isSubmitting}>
-                                    {isSubmitting ? 'Saving...' : 'Save Product'}
+                                    {isSubmitting ? 'Saving...' : (editingProduct ? 'Update Product' : 'Save Product')}
                                 </button>
                             </form>
                         </div>
@@ -299,6 +322,18 @@ const Products = () => {
                                                 <Edit2 size={12} style={{ opacity: 0.5 }} />
                                             </span>
                                         )}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEdit(product);
+                                            }}
+                                            style={{ color: '#1976d2', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
+                                            title="Edit Product Details"
+                                        >
+                                            <Edit2 size={18} />
+                                        </button>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
