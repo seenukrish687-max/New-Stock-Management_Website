@@ -240,146 +240,120 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
     }
 
     addFooter(doc);
-    doc.save(`Daily_Report_${date}.pdf`);
 };
 
 export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Platforms') => {
     const doc = new jsPDF();
-    let y = addHeader(doc, "Monthly Sales Report");
 
+    // --- Header ---
+    const [year, monthNum] = month.split('-');
+    const formattedDate = `${monthNum}//${year}`;
+
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    doc.text("MONTH :", MARGIN, 20);
+    const textWidth = doc.getTextWidth("MONTH :");
+    doc.line(MARGIN, 21, MARGIN + textWidth, 21);
+    doc.text(` ${formattedDate}`, MARGIN + textWidth, 20);
+
+    let y = 40;
+
+    // Helper for aggregation
+    const aggregateByProduct = (transactions) => {
+        const map = {};
+        transactions.forEach(t => {
+            if (!map[t.productName]) {
+                map[t.productName] = {
+                    productName: t.productName,
+                    quantity: 0,
+                    platforms: new Set()
+                };
+            }
+            map[t.productName].quantity += t.quantity;
+            if (t.platform) map[t.productName].platforms.add(t.platform);
+        });
+        return Object.values(map).map(item => ({
+            ...item,
+            platforms: Array.from(item.platforms).join(', ') || '-'
+        })).sort((a, b) => a.productName.localeCompare(b.productName));
+    };
+
+    // --- Table 1: Total separate all product sales ---
     doc.setFontSize(12);
-    doc.setTextColor(...TEXT_COLOR);
-    doc.text(`Report Month: ${month}`, MARGIN, y);
-
-    if (platformFilter !== 'All Platforms') {
-        doc.text(`Platform: ${platformFilter}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
-    }
+    doc.text("Total separate all product sales", MARGIN, y);
     y += 10;
 
-    // Summary Box
-    y = addSummaryBox(doc, y, [
-        { label: "Total Revenue", value: `RM ${data.totalRevenue.toFixed(2)}` },
-        { label: "Est. Profit", value: `RM ${data.profit.toFixed(2)}` },
-        { label: "Units Sold", value: data.totalUnitsSold },
-        { label: "Transactions", value: data.stockOut.length + data.stockIn.length }
-    ]);
-
-    // Top Products Table
-    if (data.topProducts.length > 0) {
-        doc.setFontSize(12);
-        doc.setTextColor(...SECONDARY_COLOR);
-        doc.text("Top 5 Products Sold", MARGIN, y);
-        y += 5;
-
-        autoTable(doc, {
-            startY: y,
-            head: [['Product Name', 'Quantity Sold']],
-            body: data.topProducts.map(p => [p.name, p.quantity]),
-            theme: 'striped',
-            headStyles: { fillColor: SECONDARY_COLOR },
-            margin: { left: MARGIN, right: PAGE_WIDTH / 2 } // Half width
-        });
-
-        y = doc.lastAutoTable.finalY + 15;
-    }
-
-    // --- Product Performance Breakdown ---
-    // Aggregate data by product
-    const productStats = {};
-
-    // Process Stock Out (Sales)
-    data.stockOut.forEach(t => {
-        if (!productStats[t.productName]) {
-            productStats[t.productName] = { salesQty: 0, salesValue: 0, stockInQty: 0, returnQty: 0 };
-        }
-        productStats[t.productName].salesQty += t.quantity;
-        productStats[t.productName].salesValue += (t.quantity * t.sellingPriceAtTime);
-    });
-
-    // Process Stock In & Returns
-    data.stockIn.forEach(t => {
-        if (!productStats[t.productName]) {
-            productStats[t.productName] = { salesQty: 0, salesValue: 0, stockInQty: 0, returnQty: 0 };
-        }
-        if (t.type === 'IN') {
-            productStats[t.productName].stockInQty += t.quantity;
-        } else if (t.type === 'RETURN') {
-            productStats[t.productName].returnQty += t.quantity;
-        }
-    });
-
-    const productBreakdown = Object.entries(productStats).map(([name, stats]) => [
-        name,
-        stats.salesQty,
-        `RM ${stats.salesValue.toFixed(2)}`,
-        stats.stockInQty,
-        stats.returnQty
-    ]).sort((a, b) => b[1] - a[1]); // Sort by Sales Qty descending
-
-    if (productBreakdown.length > 0) {
-        doc.setFontSize(12);
-        doc.setTextColor(...SECONDARY_COLOR);
-        doc.text("Product Performance Breakdown", MARGIN, y);
-        y += 5;
-
-        autoTable(doc, {
-            startY: y,
-            head: [['Product Name', 'Sales (Qty)', 'Sales (Value)', 'Stock In (Qty)', 'Returned (Qty)']],
-            body: productBreakdown,
-            theme: 'grid',
-            headStyles: { fillColor: [60, 60, 60] }, // Dark gray header
-            columnStyles: {
-                1: { halign: 'center' },
-                2: { halign: 'right' },
-                3: { halign: 'center' },
-                4: { halign: 'center', textColor: [200, 0, 0] } // Red text for returns
-            }
-        });
-
-        y = doc.lastAutoTable.finalY + 15;
-    }
-
-    // Sales List
-    doc.setFontSize(12);
-    doc.setTextColor(...SECONDARY_COLOR);
-    doc.text("Sales Transactions", MARGIN, y);
-    y += 5;
+    const salesData = aggregateByProduct(data.stockOut);
 
     autoTable(doc, {
         startY: y,
-        head: [['Date', 'Platform', 'Product', 'Qty', 'Total (RM)']],
-        body: data.stockOut.map(t => [
-            t.date,
-            t.platform || '-',
-            t.productName,
-            t.quantity,
-            (t.quantity * t.sellingPriceAtTime).toFixed(2)
+        head: [['Product Name', 'Total Sales', 'Platform']],
+        body: salesData.map(item => [
+            item.productName,
+            item.quantity,
+            item.platforms
         ]),
         theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR },
-        columnStyles: { 3: { halign: 'right' } }
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 80 },
+            1: { cellWidth: 40, halign: 'center' },
+            2: { cellWidth: 60 }
+        }
     });
 
-    // If there's space, add Stock In, else new page handled by autoTable
-    y = doc.lastAutoTable.finalY + 15;
+    y = doc.lastAutoTable.finalY + 20;
 
-    doc.setFontSize(12);
-    doc.setTextColor(...SECONDARY_COLOR);
-    doc.text("Stock In Transactions", MARGIN, y);
-    y += 5;
+    // --- Table 2: Total separate all product stock in ---
+    doc.text("Total separate all product stock in", MARGIN, y);
+    y += 10;
+
+    const stockInData = aggregateByProduct(data.stockIn.filter(t => t.type === 'IN'));
 
     autoTable(doc, {
         startY: y,
-        head: [['Date', 'Type', 'Product', 'Qty', 'Notes']],
-        body: data.stockIn.map(t => [
-            t.date,
-            t.type === 'IN' ? 'STOCK IN' : 'RETURN',
-            t.productName,
-            t.quantity,
-            t.notes || '-'
+        head: [['Product Name', 'Total Stock In', 'Platform']],
+        body: stockInData.map(item => [
+            item.productName,
+            item.quantity,
+            item.platforms
         ]),
         theme: 'grid',
-        headStyles: { fillColor: [100, 100, 100] }
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 80 },
+            1: { cellWidth: 40, halign: 'center' },
+            2: { cellWidth: 60 }
+        }
+    });
+
+    y = doc.lastAutoTable.finalY + 20;
+
+    // --- Table 3: Total separate all product Return ---
+    doc.text("Total separate all product Return", MARGIN, y);
+    y += 10;
+
+    const returnData = aggregateByProduct(data.stockIn.filter(t => t.type === 'RETURN'));
+
+    autoTable(doc, {
+        startY: y,
+        head: [['Product Name', 'Total Return', 'Platform']],
+        body: returnData.map(item => [
+            item.productName,
+            item.quantity,
+            item.platforms
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 80 },
+            1: { cellWidth: 40, halign: 'center' },
+            2: { cellWidth: 60 }
+        }
     });
 
     addFooter(doc);
