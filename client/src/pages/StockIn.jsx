@@ -59,7 +59,8 @@ const StockIn = () => {
                             fontWeight: 'bold',
                             textAlign: 'center'
                         }}>
-                            Selected Product: {selectedProduct.name}
+                            <div style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{selectedProduct.name}</div>
+                            Available Stock: {selectedProduct.currentStock}
                         </div>
                     )}
 
