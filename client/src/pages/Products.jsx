@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStock } from '../context/StockContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, X, Upload, Trash2, Edit2 } from 'lucide-react';
+import { Plus, X, Upload, Trash2, Edit2, FileText } from 'lucide-react';
 import { API_URL } from '../config';
 import { getCategoryColor } from '../utils/colors';
+import { generateProductReportPDF } from '../utils/pdfGenerator';
 
 const Products = () => {
-    const { products, addProduct, deleteProduct, updateProduct } = useStock();
+    const { products, addProduct, deleteProduct, updateProduct, transactions } = useStock();
     const { showToast } = useToast();
     const [showForm, setShowForm] = useState(false);
     const [preview, setPreview] = useState(null);
@@ -69,6 +70,31 @@ const Products = () => {
             showToast('Failed to add product', 'error');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleProductReport = (product) => {
+        try {
+            // Filter transactions for this product
+            const pStockIn = transactions.stockIn.filter(t => t.productId === product.id);
+            const pStockOut = transactions.stockOut.filter(t => t.productId === product.id);
+
+            const totalIn = pStockIn.reduce((sum, t) => sum + t.quantity, 0);
+            const totalOut = pStockOut.reduce((sum, t) => sum + t.quantity, 0);
+
+            const reportData = {
+                transactions: [...pStockIn, ...pStockOut].sort((a, b) => new Date(b.date) - new Date(a.date)),
+                stockIn: pStockIn,
+                stockOut: pStockOut,
+                totalIn,
+                totalOut
+            };
+
+            generateProductReportPDF(reportData, product);
+            showToast(`Report generated for ${product.name}`, 'success');
+        } catch (error) {
+            console.error("Report generation failed:", error);
+            showToast("Failed to generate report", 'error');
         }
     };
 
@@ -273,6 +299,16 @@ const Products = () => {
                                                 <Edit2 size={12} style={{ opacity: 0.5 }} />
                                             </span>
                                         )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleProductReport(product);
+                                            }}
+                                            style={{ color: '#596235', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
+                                            title="Generate Report"
+                                        >
+                                            <FileText size={18} />
+                                        </button>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation(); // Prevent event bubbling

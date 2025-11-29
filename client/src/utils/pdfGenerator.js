@@ -375,41 +375,91 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
     }
     y += 15;
 
-    // Summary Box
-    y = addSummaryBox(doc, y, [
-        { label: "Current Stock", value: product.currentStock },
-        { label: "Total Stock In", value: data.totalIn },
-        { label: "Total Stock Out", value: data.totalOut }
-    ]);
+    // Helper for aggregation by platform
+    const aggregateByPlatform = (transactions) => {
+        const map = {};
+        transactions.forEach(t => {
+            const platform = t.platform || '-';
+            if (!map[platform]) {
+                map[platform] = {
+                    platform: platform,
+                    quantity: 0
+                };
+            }
+            map[platform].quantity += t.quantity;
+        });
+        return Object.values(map).sort((a, b) => a.platform.localeCompare(b.platform));
+    };
 
-    // Transaction History
+    // --- Table 1: Total Sales (Stock Out) ---
     doc.setFontSize(12);
     doc.setTextColor(...SECONDARY_COLOR);
-    doc.text("Transaction History", MARGIN, y);
+    doc.text("Total Sales", MARGIN, y);
     y += 5;
+
+    const salesData = aggregateByPlatform(data.stockOut);
 
     autoTable(doc, {
         startY: y,
-        head: [['Date', 'Type', 'Platform', 'Qty', 'Notes']],
-        body: data.transactions.map(t => [
-            t.date,
-            t.type === 'IN' ? 'STOCK IN' : t.type === 'RETURN' ? 'RETURN' : 'STOCK OUT',
-            t.platform || '-',
-            t.quantity,
-            t.notes || '-'
+        head: [['Platform', 'Total Sales']],
+        body: salesData.map(item => [
+            item.platform,
+            item.quantity
         ]),
         theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR },
-        didParseCell: (data) => {
-            if (data.section === 'body' && data.column.index === 1) {
-                if (data.cell.raw === 'STOCK IN') {
-                    data.cell.styles.textColor = [46, 125, 50]; // Green
-                } else if (data.cell.raw === 'RETURN') {
-                    data.cell.styles.textColor = [217, 119, 6]; // Orange/Amber
-                } else {
-                    data.cell.styles.textColor = [198, 40, 40]; // Red
-                }
-            }
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 50, halign: 'center' }
+        }
+    });
+
+    y = doc.lastAutoTable.finalY + 15;
+
+    // --- Table 2: Total Stock In ---
+    doc.text("Total Stock In", MARGIN, y);
+    y += 5;
+
+    const stockInData = aggregateByPlatform(data.stockIn.filter(t => t.type === 'IN'));
+
+    autoTable(doc, {
+        startY: y,
+        head: [['Platform', 'Total Stock In']],
+        body: stockInData.map(item => [
+            item.platform,
+            item.quantity
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [46, 125, 50], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 50, halign: 'center' }
+        }
+    });
+
+    y = doc.lastAutoTable.finalY + 15;
+
+    // --- Table 3: Total Return ---
+    doc.text("Total Return", MARGIN, y);
+    y += 5;
+
+    const returnData = aggregateByPlatform(data.stockIn.filter(t => t.type === 'RETURN'));
+
+    autoTable(doc, {
+        startY: y,
+        head: [['Platform', 'Total Return']],
+        body: returnData.map(item => [
+            item.platform,
+            item.quantity
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
+        headStyles: { fillColor: [217, 119, 6], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: {
+            0: { cellWidth: 100 },
+            1: { cellWidth: 50, halign: 'center' }
         }
     });
 
