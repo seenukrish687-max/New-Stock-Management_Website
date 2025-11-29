@@ -16,7 +16,8 @@
   --color-primary-accent: #ff8a65;
   --color-secondary-accent: #aed581;
   --color-dark-accent: #1e1e1e;
-  --color-white: #1e1e1e; /* Card BG in dark mode */
+  --color-white: #1e1e1e;
+  /* Card BG in dark mode */
   --color-text-main: #e0e0e0;
   --color-text-light: #b0b0b0;
   --color-card-bg: #1e1e1e;
@@ -53,7 +54,8 @@ button {
 /* Utility Classes */
 .btn-primary {
   background-color: var(--color-primary-accent);
-  color: #fff; /* Always white text on primary buttons */
+  color: #fff;
+  /* Always white text on primary buttons */
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
@@ -125,10 +127,95 @@ button {
 
 /* Page Transitions */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .main-content {
+    padding: 1rem;
+    margin-top: 60px;
+    /* Space for mobile header */
+  }
+
+  /* Sidebar Mobile Styles */
+  aside {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100vh;
+    width: 250px !important;
+    z-index: 1000;
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+
+  aside.open {
+    left: 0;
+  }
+
+  /* Overlay when sidebar is open */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+  }
+
+  .sidebar-overlay.visible {
+    display: block;
+  }
+
+  /* Mobile Header/Toggle */
+  .mobile-header {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--color-dark-accent);
+    color: var(--color-white);
+    align-items: center;
+    padding: 0 1rem;
+    z-index: 900;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Adjust Grid Layouts */
+  .card {
+    padding: 1rem;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+}
+
+.mobile-header {
+  display: none;
 }

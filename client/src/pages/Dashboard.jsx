@@ -179,7 +179,7 @@ const Dashboard = () => {
             </div>
 
             {/* Charts Section */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
 
                 {/* Today's Sales Line Chart */}
                 <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
