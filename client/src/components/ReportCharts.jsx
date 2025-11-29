@@ -82,52 +82,7 @@ const ReportCharts = ({ data, type, products }) => {
     }
 
     if (type === 'daily') {
-        // Prepare data for Category Sales
-        const categorySales = {};
-        data.stockOut.forEach(t => {
-            const product = products.find(p => p.id === t.productId);
-            const category = product ? product.category : 'Uncategorized';
-            categorySales[category] = (categorySales[category] || 0) + t.quantity;
-        });
-
-        const pieData = Object.keys(categorySales).map(cat => ({
-            name: cat,
-            value: categorySales[cat]
-        }));
-
-        return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
-                <div className="card">
-                    <h3 style={{ marginBottom: '1.5rem', fontWeight: 'bold', color: '#333' }}>Sales by Category</h3>
-                    <div style={{ height: '300px' }}>
-                        {pieData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={pieData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={getCategoryColor(entry.name).hex} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    <Legend verticalAlign="bottom" height={36} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999' }}>No sales data</div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     return null;
