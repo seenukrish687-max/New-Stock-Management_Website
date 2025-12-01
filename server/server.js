@@ -137,7 +137,7 @@ app.post('/api/stock-in', async (req, res) => {
 // Stock Out
 app.post('/api/stock-out', async (req, res) => {
     try {
-        const { productId, quantity, date, notes, platform, customerName, paymentStatus } = req.body;
+        const { productId, quantity, date, notes, platform, customerName, paymentStatus, receiverName } = req.body;
         const product = await Product.findOne({ id: productId });
 
         if (!product) return res.status(404).json({ error: 'Product not found' });
@@ -162,7 +162,8 @@ app.post('/api/stock-out', async (req, res) => {
             notes,
             platform,
             customerName,
-            paymentStatus
+            paymentStatus,
+            receiverName
         });
 
         await transaction.save();

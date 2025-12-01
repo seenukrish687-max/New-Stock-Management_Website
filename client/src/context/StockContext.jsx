@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { API_URL as BASE_URL } from '../config';
+import { useToast } from './ToastContext';
 
 const StockContext = createContext();
 
@@ -9,6 +10,7 @@ export const StockProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [transactions, setTransactions] = useState({ stockIn: [], stockOut: [] });
     const [loading, setLoading] = useState(true);
+    const { showToast } = useToast();
 
     const API_URL = `${BASE_URL}/api`;
 
@@ -19,6 +21,7 @@ export const StockProvider = ({ children }) => {
             setProducts(data);
         } catch (error) {
             console.error("Failed to fetch products", error);
+            showToast("Failed to load products. Check server connection.", "error");
         }
     };
 
@@ -29,6 +32,7 @@ export const StockProvider = ({ children }) => {
             setTransactions(data || { stockIn: [], stockOut: [] });
         } catch (error) {
             console.error("Failed to fetch transactions", error);
+            showToast("Failed to load transactions.", "error");
         }
     };
 

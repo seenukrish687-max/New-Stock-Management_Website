@@ -14,8 +14,8 @@ import ReturnProduct from './pages/ReturnProduct';
 function App() {
   return (
     <ThemeProvider>
-      <StockProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <StockProvider>
           <Router>
             <div className="layout-container">
               <Sidebar />
@@ -32,8 +32,8 @@ function App() {
               </main>
             </div>
           </Router>
-        </ToastProvider>
-      </StockProvider>
+        </StockProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

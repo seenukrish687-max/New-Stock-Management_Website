@@ -11,6 +11,7 @@ const transactionSchema = new mongoose.Schema({
     notes: { type: String },
     platform: { type: String }, // For Stock Out sales platform
     supplier: { type: String }, // For Stock In supplier
+    receiverName: { type: String }, // For NVS SAMA SAMA receiver
     returnReason: { type: String }, // For Return reason
     customerName: { type: String }, // For Whatsapp sales
     paymentStatus: { type: String, enum: ['Paid', 'COD'] }, // For Whatsapp sales

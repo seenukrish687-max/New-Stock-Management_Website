@@ -98,7 +98,7 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             t.productName,
             t.quantity,
             `RM ${t.sellingPriceAtTime ? t.sellingPriceAtTime.toFixed(2) : '0.00'}`,
-            t.platform || '-',
+            t.receiverName ? `${t.platform} (${t.receiverName})` : (t.platform || '-'),
             `RM ${(t.quantity * (t.sellingPriceAtTime || 0)).toFixed(2)}`
         ]);
 
@@ -306,13 +306,16 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
                     productName: t.productName,
                     quantity: 0,
                     totalAmount: 0,
+                    totalAmount: 0,
                     price: t.sellingPriceAtTime || 0,
-                    dates: []
+                    dates: [],
+                    receiverNames: new Set()
                 };
             }
             productMap[t.productName].quantity += t.quantity;
             productMap[t.productName].totalAmount += (t.quantity * (t.sellingPriceAtTime || 0));
             productMap[t.productName].dates.push(new Date(t.date));
+            if (t.receiverName) productMap[t.productName].receiverNames.add(t.receiverName);
         });
 
         const tableBody = Object.values(productMap).map(item => {
@@ -320,8 +323,13 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
             const maxDate = new Date(Math.max(...item.dates)).getDate();
             const dateRange = minDate === maxDate ? `${minDate}` : `${minDate}-${maxDate}`;
 
+            let displayName = item.productName;
+            if (item.receiverNames && item.receiverNames.size > 0) {
+                displayName += ` (${Array.from(item.receiverNames).join(', ')})`;
+            }
+
             return [
-                item.productName,
+                displayName,
                 item.quantity,
                 `RM ${item.price.toFixed(2)}`,
                 `RM ${item.totalAmount.toFixed(2)}`,

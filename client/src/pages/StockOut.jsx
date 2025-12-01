@@ -12,7 +12,8 @@ const StockOut = () => {
         date: new Date().toISOString().split('T')[0],
         platform: 'Tiktok',
         customerName: '',
-        paymentStatus: 'Paid'
+        paymentStatus: 'Paid',
+        receiverName: ''
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,7 +37,8 @@ const StockOut = () => {
                 date: new Date().toISOString().split('T')[0],
                 platform: 'Tiktok',
                 customerName: '',
-                paymentStatus: 'Paid'
+                paymentStatus: 'Paid',
+                receiverName: ''
             });
             setSelectedProduct(null);
         } catch (error) {
@@ -156,6 +158,20 @@ const StockOut = () => {
                                     <span style={{ fontWeight: '500', color: '#b45309' }}>COD</span>
                                 </label>
                             </div>
+                        </div>
+                    )}
+
+                    {formData.platform === 'NVS SAMA SAMA' && (
+                        <div className="animate-fade-in" style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fff7ed', borderRadius: '8px', border: '1px solid #fed7aa' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Receiver Name</label>
+                            <input
+                                type="text"
+                                className="input-field"
+                                placeholder="Enter receiver name"
+                                value={formData.receiverName}
+                                onChange={(e) => setFormData({ ...formData, receiverName: e.target.value })}
+                                required={formData.platform === 'NVS SAMA SAMA'}
+                            />
                         </div>
                     )}
 
