@@ -149,13 +149,13 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             t.productName,
             t.quantity,
             t.platform || '-',
-            t.returnReason || t.notes || '-',
-            t.date
+            t.returnReason || '-',
+            t.notes || '-'
         ]);
 
         autoTable(doc, {
             startY: y,
-            head: [['Product Name', 'Return Qty', 'Platform', 'Return Reason', 'Date']],
+            head: [['Product Name', 'Return Qty', 'Platform', 'Return Reason', 'Notes']],
             body: returnBody,
             theme: 'grid',
             headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
