@@ -266,64 +266,6 @@ const Reports = () => {
         return { topPlatform, lowestPlatform, highestReturnProduct, recommendation };
     }, [dailyData]);
 
-    const generateWhatsAppSummary = () => {
-        const date = selectedDate;
-        let text = `DAILY STOCK REPORT – ${date}\n\n`;
-
-        // Sales Breakdown
-        text += `Sales Breakdown (By Platform)\n\n`;
-
-        const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
-
-        platforms.forEach(platform => {
-            text += `Platform: ${platform}\n\n`;
-            const platformTransactions = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
-
-            platformTransactions.forEach(t => {
-                text += `${t.productName} — ${t.quantity} pcs\n`;
-            });
-            text += `\n`;
-        });
-
-        // Stock In Summary
-        text += `Stock In Summary\n\n`;
-        text += `Total Stock In: ${dailyData.totalStockIn} units\n\n`;
-        text += `Products Received:\n\n`;
-
-        const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
-        if (stockInItems.length > 0) {
-            stockInItems.forEach(t => {
-                text += `${t.productName} — ${t.quantity}\n\n`;
-            });
-        } else {
-            text += `None\n\n`;
-        }
-
-        // Return Summary
-        text += `Return Summary (By Platform)\n\n`;
-        text += `Total Returns: ${dailyData.totalReturns} units\n\n`;
-
-        const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
-        if (returnItems.length > 0) {
-            const returnPlatforms = [...new Set(returnItems.map(t => t.platform || 'Unknown'))];
-
-            returnPlatforms.forEach(platform => {
-                text += `Platform: ${platform}\n\n`;
-                const platformReturns = returnItems.filter(t => (t.platform || 'Unknown') === platform);
-
-                platformReturns.forEach(t => {
-                    text += `${t.productName} — ${t.quantity} units\n`;
-                });
-                text += `\n`;
-            });
-        } else {
-            text += `None\n`;
-        }
-
-        const encodedText = encodeURIComponent(text);
-        window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-    };
-
     const [showPreview, setShowPreview] = useState(false);
     const [previewType, setPreviewType] = useState('daily'); // 'daily' or 'monthly'
 
@@ -383,26 +325,6 @@ const Reports = () => {
                         <p style={{ color: '#666' }}>Overview of your inventory performance</p>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        {activeTab === 'daily' && (
-                            <button
-                                className="btn-primary"
-                                onClick={generateWhatsAppSummary}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    backgroundColor: '#25D366', // WhatsApp Green
-                                    boxShadow: '0 4px 6px rgba(37, 211, 102, 0.25)'
-                                }}
-                                title="Share as Text"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                                </svg>
-                                <span>Text</span>
-                            </button>
-                        )}
-
                         {(activeTab === 'daily' || activeTab === 'monthly') && (
                             <button
                                 className="btn-primary"
