@@ -276,57 +276,74 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
 
     y += (Math.ceil(summaryItems.length / 3) * (boxHeight + 5)) + 10;
 
-    // 2. Sales Breakdown (Grouped by Product -> Split by Platform)
+    // 2. Sales Breakdown (Separate Table per Platform)
     y = addSectionTitle(doc, "2. Sales Breakdown", y);
 
-    // Aggregate sales by Product + Platform
-    const salesMap = {};
+    // Group sales by Platform
+    const salesByPlatform = {};
     data.stockOut.forEach(t => {
-        const key = `${t.productName}-${t.platform}`;
-        if (!salesMap[key]) {
-            salesMap[key] = {
-                productName: t.productName,
-                platform: t.platform || 'Unknown',
-                quantity: 0,
-                totalAmount: 0,
-                price: t.sellingPriceAtTime || 0,
-                dates: []
-            };
-        }
-        salesMap[key].quantity += t.quantity;
-        salesMap[key].totalAmount += (t.quantity * (t.sellingPriceAtTime || 0));
-        salesMap[key].dates.push(new Date(t.date));
+        const platform = t.platform || 'Unknown';
+        if (!salesByPlatform[platform]) salesByPlatform[platform] = [];
+        salesByPlatform[platform].push(t);
     });
 
-    const salesBody = Object.values(salesMap).map(item => {
-        const minDate = new Date(Math.min(...item.dates)).getDate();
-        const maxDate = new Date(Math.max(...item.dates)).getDate();
-        const dateRange = minDate === maxDate ? `${minDate}` : `${minDate}-${maxDate}`;
+    Object.entries(salesByPlatform).forEach(([platform, transactions]) => {
+        // Check page break
+        if (y > 220) { doc.addPage(); y = 20; }
 
-        return [
-            item.productName,
-            item.quantity,
-            `RM ${item.price.toFixed(2)}`,
-            item.platform,
-            `RM ${item.totalAmount.toFixed(2)}`,
-            dateRange
-        ];
-    }).sort((a, b) => a[0].localeCompare(b[0]));
+        // Platform Sub-header
+        doc.setFontSize(11);
+        doc.setTextColor(...SECONDARY_COLOR);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Platform: ${platform}`, MARGIN, y);
+        y += 6;
 
-    autoTable(doc, {
-        startY: y,
-        head: [['Product Name', 'Qty Sold', 'Price', 'Platform', 'Total Amount', 'Date Range']],
-        body: salesBody,
-        theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-            4: { halign: 'right' },
-            5: { halign: 'center' }
-        }
+        // Aggregate by Product within this Platform
+        const productMap = {};
+        transactions.forEach(t => {
+            if (!productMap[t.productName]) {
+                productMap[t.productName] = {
+                    productName: t.productName,
+                    quantity: 0,
+                    totalAmount: 0,
+                    price: t.sellingPriceAtTime || 0,
+                    dates: []
+                };
+            }
+            productMap[t.productName].quantity += t.quantity;
+            productMap[t.productName].totalAmount += (t.quantity * (t.sellingPriceAtTime || 0));
+            productMap[t.productName].dates.push(new Date(t.date));
+        });
+
+        const tableBody = Object.values(productMap).map(item => {
+            const minDate = new Date(Math.min(...item.dates)).getDate();
+            const maxDate = new Date(Math.max(...item.dates)).getDate();
+            const dateRange = minDate === maxDate ? `${minDate}` : `${minDate}-${maxDate}`;
+
+            return [
+                item.productName,
+                item.quantity,
+                `RM ${item.price.toFixed(2)}`,
+                `RM ${item.totalAmount.toFixed(2)}`,
+                dateRange
+            ];
+        }).sort((a, b) => a[0].localeCompare(b[0]));
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Product Name', 'Qty Sold', 'Price', 'Total Amount', 'Date Range']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                3: { halign: 'right' },
+                4: { halign: 'center' }
+            }
+        });
+
+        y = doc.lastAutoTable.finalY + 10;
     });
-
-    y = doc.lastAutoTable.finalY + 10;
 
     // 3. Stock-In Breakdown
     // Check page break
