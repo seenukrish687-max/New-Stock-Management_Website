@@ -120,10 +120,49 @@ const Reports = () => {
         return { transactions: allTrans, totalIn, totalOut };
     }, [transactions, selectedProductId, selectedPlatform]);
 
+    // --- Intelligent Notes Logic ---
+    const intelligentNotes = useMemo(() => {
+        if (!dailyData.stockOut.length && !dailyData.stockIn.length) return {};
+
+        // Top-selling platform
+        const platformSales = {};
+        dailyData.stockOut.forEach(t => {
+            const p = t.platform || 'Unknown';
+            platformSales[p] = (platformSales[p] || 0) + t.quantity;
+        });
+        const topPlatform = Object.entries(platformSales).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+        const lowestPlatform = Object.entries(platformSales).sort((a, b) => a[1] - b[1])[0]?.[0] || 'N/A';
+
+        // Products with highest return rate
+        const returnCounts = {};
+        dailyData.stockIn.filter(t => t.type === 'RETURN').forEach(t => {
+            returnCounts[t.productName] = (returnCounts[t.productName] || 0) + t.quantity;
+        });
+        const highestReturnProduct = Object.entries(returnCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'None';
+
+        // Recommendation
+        let recommendation = 'Maintain current stock levels.';
+        if (highestReturnProduct !== 'None') {
+            recommendation = `Investigate quality issues with ${highestReturnProduct}.`;
+        } else if (dailyData.totalSales > 50) {
+            recommendation = 'Sales are high! Consider restocking popular items.';
+        }
+
+        return { topPlatform, lowestPlatform, highestReturnProduct, recommendation };
+    }, [dailyData]);
+
+    const [showPreview, setShowPreview] = useState(false);
+
     // --- PDF Export Logic ---
     const handleExportDaily = () => {
+        setShowPreview(true);
+    };
+
+    const confirmExportDaily = () => {
         try {
-            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform);
+            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes);
+            setShowPreview(false);
+            showToast("Report downloaded successfully!", "success");
         } catch (error) {
             console.error("PDF Export Failed:", error);
             showToast("Failed to export PDF: " + error.message, 'error');
@@ -357,6 +396,32 @@ const Reports = () => {
                             />
                         </>
                     )}
+                </div>
+            )}
+            {/* Preview Modal */}
+            {showPreview && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                }}>
+                    <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '600px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Report Preview</h3>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{ fontWeight: 'bold', color: '#2563EB' }}>Intelligent Notes</h4>
+                            <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
+                                <li><strong>Top-selling Platform:</strong> {intelligentNotes.topPlatform}</li>
+                                <li><strong>Lowest Sales Platform:</strong> {intelligentNotes.lowestPlatform}</li>
+                                <li><strong>Highest Return Product:</strong> {intelligentNotes.highestReturnProduct}</li>
+                                <li><strong>Recommendation:</strong> {intelligentNotes.recommendation}</li>
+                            </ul>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button onClick={() => setShowPreview(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}>Cancel</button>
+                            <button onClick={confirmExportDaily} className="btn-primary">Download PDF</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

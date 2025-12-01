@@ -10,6 +10,8 @@ const transactionSchema = new mongoose.Schema({
     date: { type: String, required: true }, // YYYY-MM-DD
     notes: { type: String },
     platform: { type: String }, // For Stock Out sales platform
+    supplier: { type: String }, // For Stock In supplier
+    returnReason: { type: String }, // For Return reason
     customerName: { type: String }, // For Whatsapp sales
     paymentStatus: { type: String, enum: ['Paid', 'COD'] }, // For Whatsapp sales
     sellingPriceAtTime: { type: Number }, // For Stock Out

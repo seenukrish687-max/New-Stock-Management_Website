@@ -10,6 +10,7 @@ const StockIn = () => {
         productId: '',
         quantity: '',
         date: new Date().toISOString().split('T')[0],
+        supplier: '',
         notes: ''
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -28,6 +29,7 @@ const StockIn = () => {
             productId: '',
             quantity: '',
             date: new Date().toISOString().split('T')[0],
+            supplier: '',
             notes: ''
         });
         setSelectedProduct(null);
@@ -93,6 +95,16 @@ const StockIn = () => {
                             />
                         </div>
                     </div>
+
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Supplier</label>
+                    <input
+                        type="text"
+                        className="input-field"
+                        placeholder="Supplier Name"
+                        value={formData.supplier}
+                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                        style={{ marginBottom: '1rem' }}
+                    />
 
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Notes</label>
                     <textarea

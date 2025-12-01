@@ -12,6 +12,7 @@ const ReturnProduct = () => {
         quantity: '',
         date: new Date().toISOString().split('T')[0],
         platform: 'Tiktok',
+        returnReason: '',
         notes: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +31,7 @@ const ReturnProduct = () => {
                 quantity: '',
                 date: new Date().toISOString().split('T')[0],
                 platform: 'Tiktok',
+                returnReason: '',
                 notes: ''
             });
         } catch (error) {
@@ -95,10 +97,25 @@ const ReturnProduct = () => {
                         <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
                     </select>
 
+                    <label style={{ display: 'block', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>Return Reason</label>
+                    <select
+                        className="input-field"
+                        value={formData.returnReason}
+                        onChange={(e) => setFormData({ ...formData, returnReason: e.target.value })}
+                        required
+                    >
+                        <option value="">Select Reason</option>
+                        <option value="Damaged">Damaged</option>
+                        <option value="Wrong Item">Wrong Item</option>
+                        <option value="Customer Changed Mind">Customer Changed Mind</option>
+                        <option value="Defective">Defective</option>
+                        <option value="Other">Other</option>
+                    </select>
+
                     <label style={{ display: 'block', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: '500' }}>Notes (Optional)</label>
                     <textarea
                         className="input-field"
-                        placeholder="Reason for return (e.g., Damaged, Wrong Item)"
+                        placeholder="Additional notes (Optional)"
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         rows="3"
