@@ -21,174 +21,198 @@ const Reports = () => {
 
     // --- Daily Report Logic ---
     const dailyData = useMemo(() => {
-        let stockIn = transactions?.stockIn?.filter(t => t.date === selectedDate) || [];
-        let stockOut = transactions?.stockOut?.filter(t => t.date === selectedDate) || [];
+        try {
+            if (!transactions || !transactions.stockIn || !transactions.stockOut) {
+                return { stockIn: [], stockOut: [], totalSales: 0, totalStockOut: 0, totalReturns: 0, totalStockIn: 0 };
+            }
 
-        if (filterType === 'IN') {
-            stockOut = [];
-            stockIn = stockIn.filter(t => t.type === 'IN');
+            let stockIn = transactions.stockIn.filter(t => t.date === selectedDate) || [];
+            let stockOut = transactions.stockOut.filter(t => t.date === selectedDate) || [];
+
+            if (filterType === 'IN') {
+                stockOut = [];
+                stockIn = stockIn.filter(t => t.type === 'IN');
+            }
+            if (filterType === 'OUT') stockIn = [];
+            if (filterType === 'RETURN') {
+                stockIn = stockIn.filter(t => t.type === 'RETURN');
+                stockOut = [];
+            }
+
+            if (selectedProductId) {
+                stockIn = stockIn.filter(t => t.productId === selectedProductId);
+                stockOut = stockOut.filter(t => t.productId === selectedProductId);
+            }
+
+            if (selectedPlatform !== 'All Platforms') {
+                stockOut = stockOut.filter(t => t.platform === selectedPlatform);
+                stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
+            }
+
+            const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * (t.sellingPriceAtTime || 0)), 0);
+            const totalStockOut = stockOut.reduce((sum, t) => sum + t.quantity, 0);
+            const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
+            const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
+
+            return { stockIn, stockOut, totalSales, totalStockOut, totalReturns, totalStockIn };
+        } catch (error) {
+            console.error("Error calculating daily data:", error);
+            return { stockIn: [], stockOut: [], totalSales: 0, totalStockOut: 0, totalReturns: 0, totalStockIn: 0 };
         }
-        if (filterType === 'OUT') stockIn = [];
-        if (filterType === 'RETURN') {
-            stockIn = stockIn.filter(t => t.type === 'RETURN');
-            stockOut = [];
-        }
-
-        if (selectedProductId) {
-            stockIn = stockIn.filter(t => t.productId === selectedProductId);
-            stockOut = stockOut.filter(t => t.productId === selectedProductId);
-        }
-
-        if (selectedPlatform !== 'All Platforms') {
-            stockOut = stockOut.filter(t => t.platform === selectedPlatform);
-            stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
-        }
-
-        const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
-        const totalStockOut = stockOut.reduce((sum, t) => sum + t.quantity, 0);
-        const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
-        const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
-
-        return { stockIn, stockOut, totalSales, totalStockOut, totalReturns, totalStockIn };
     }, [transactions, selectedDate, filterType, selectedProductId, selectedPlatform]);
 
     // --- Monthly Report Logic ---
     const monthlyData = useMemo(() => {
-        let stockOut = transactions?.stockOut?.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
-        let stockIn = transactions?.stockIn?.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
-
-        if (filterType === 'IN') {
-            stockOut = [];
-            stockIn = stockIn.filter(t => t.type === 'IN');
-        }
-        if (filterType === 'OUT') stockIn = [];
-        if (filterType === 'RETURN') {
-            stockIn = stockIn.filter(t => t.type === 'RETURN');
-            stockOut = [];
-        }
-
-        if (selectedProductId) {
-            stockIn = stockIn.filter(t => t.productId === selectedProductId);
-            stockOut = stockOut.filter(t => t.productId === selectedProductId);
-        }
-
-        if (selectedPlatform !== 'All Platforms') {
-            stockOut = stockOut.filter(t => t.platform === selectedPlatform);
-            stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
-        }
-
-        const totalRevenue = stockOut.reduce((sum, t) => sum + (t.quantity * t.sellingPriceAtTime), 0);
-        const totalUnitsSold = stockOut.reduce((sum, t) => sum + t.quantity, 0);
-        const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
-        const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
-
-        let totalCost = 0;
-        const productSales = {};
-
-        stockOut.forEach(t => {
-            const product = products.find(p => p.id === t.productId);
-            const cost = product ? product.purchasePrice : 0;
-            totalCost += t.quantity * cost;
-            if (!productSales[t.productName]) productSales[t.productName] = 0;
-            productSales[t.productName] += t.quantity;
-        });
-
-        const profit = totalRevenue - totalCost;
-        const topProducts = Object.entries(productSales)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 5)
-            .map(([name, quantity]) => ({ name, quantity }));
-
-        // --- Platform Performance ---
-        const platformStats = {};
-        stockOut.forEach(t => {
-            const p = t.platform || 'Unknown';
-            if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
-            platformStats[p].sales += t.quantity;
-        });
-        stockIn.filter(t => t.type === 'RETURN').forEach(t => {
-            const p = t.platform || 'Unknown';
-            if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
-            platformStats[p].returns += t.quantity;
-        });
-
-        const platformPerformance = Object.entries(platformStats).map(([platform, stats]) => {
-            const percentage = totalUnitsSold > 0 ? (stats.sales / totalUnitsSold) * 100 : 0;
-            const net = stats.sales - stats.returns;
-            return { platform, ...stats, percentage, net };
-        });
-
-        // --- Auto Insights ---
-        const bestSellingProduct = topProducts[0]?.name || 'N/A';
-
-        // Week with highest sales
-        const weeklySales = {};
-        stockOut.forEach(t => {
-            const date = new Date(t.date);
-            const weekNum = Math.ceil((date.getDate() - 1 - date.getDay()) / 7); // Rough week number
-            if (!weeklySales[weekNum]) weeklySales[weekNum] = 0;
-            weeklySales[weekNum] += t.quantity;
-        });
-        const highestSalesWeek = Object.entries(weeklySales).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-
-        // Platform with highest sales (Growth proxy)
-        const highestGrowthPlatform = platformPerformance.sort((a, b) => b.sales - a.sales)[0]?.platform || 'N/A';
-
-        // Products with unusual returns (Return rate > 20%)
-        const unusualReturns = [];
-        Object.keys(productSales).forEach(prodName => {
-            const sales = productSales[prodName];
-            const returns = stockIn.filter(t => t.type === 'RETURN' && t.productName === prodName).reduce((sum, t) => sum + t.quantity, 0);
-            if (sales > 5 && (returns / sales) > 0.2) {
-                unusualReturns.push(prodName);
+        try {
+            if (!transactions || !transactions.stockIn || !transactions.stockOut) {
+                return {
+                    totalRevenue: 0, totalUnitsSold: 0, profit: 0, topProducts: [],
+                    stockOut: [], stockIn: [], totalReturns: 0, totalStockIn: 0,
+                    platformPerformance: [], monthlyInsights: {}, closingStock: []
+                };
             }
-        });
 
-        const monthlyInsights = {
-            bestSellingProduct,
-            highestSalesWeek: `Week ${highestSalesWeek}`,
-            highestGrowthPlatform,
-            unusualReturns: unusualReturns.join(', ') || 'None',
-            recommendations: unusualReturns.length > 0 ? `Check quality for: ${unusualReturns.join(', ')}` : 'Promote top performing products.'
-        };
+            let stockOut = transactions.stockOut.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
+            let stockIn = transactions.stockIn.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
 
-        // --- Closing Stock Calculation (Reverse Engineering) ---
-        // Closing Stock = Current Stock - (Stock In > Month End) + (Stock Out > Month End) - (Returns > Month End)
-        // Actually, simpler: Current Stock is the LIVE stock.
-        // If we want stock at end of selectedMonth:
-        // We need to REVERSE all transactions that happened AFTER the selectedMonth.
+            if (filterType === 'IN') {
+                stockOut = [];
+                stockIn = stockIn.filter(t => t.type === 'IN');
+            }
+            if (filterType === 'OUT') stockIn = [];
+            if (filterType === 'RETURN') {
+                stockIn = stockIn.filter(t => t.type === 'RETURN');
+                stockOut = [];
+            }
 
-        const [year, month] = selectedMonth.split('-');
-        const lastDayOfMonth = new Date(year, month, 0); // Last day of selected month
-        lastDayOfMonth.setHours(23, 59, 59, 999);
+            if (selectedProductId) {
+                stockIn = stockIn.filter(t => t.productId === selectedProductId);
+                stockOut = stockOut.filter(t => t.productId === selectedProductId);
+            }
 
-        const closingStock = products.map(product => {
-            let stock = product.currentStock;
+            if (selectedPlatform !== 'All Platforms') {
+                stockOut = stockOut.filter(t => t.platform === selectedPlatform);
+                stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
+            }
 
-            // Find transactions AFTER the selected month
-            const futureTransactions = transactions.stockIn.concat(transactions.stockOut).filter(t => {
-                const tDate = new Date(t.date);
-                return tDate > lastDayOfMonth && t.productId === product.id;
+            const totalRevenue = stockOut.reduce((sum, t) => sum + (t.quantity * (t.sellingPriceAtTime || 0)), 0);
+            const totalUnitsSold = stockOut.reduce((sum, t) => sum + t.quantity, 0);
+            const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
+            const totalStockIn = stockIn.filter(t => t.type === 'IN').reduce((sum, t) => sum + t.quantity, 0);
+
+            let totalCost = 0;
+            const productSales = {};
+
+            stockOut.forEach(t => {
+                const product = products.find(p => p.id === t.productId);
+                const cost = product ? product.purchasePrice : 0;
+                totalCost += t.quantity * cost;
+                if (!productSales[t.productName]) productSales[t.productName] = 0;
+                productSales[t.productName] += t.quantity;
             });
 
-            futureTransactions.forEach(t => {
-                if (t.type === 'IN') {
-                    stock -= t.quantity; // Reverse Stock In
-                } else if (t.type === 'OUT') {
-                    stock += t.quantity; // Reverse Stock Out
-                } else if (t.type === 'RETURN') {
-                    stock -= t.quantity; // Reverse Return (which added to stock)
+            const profit = totalRevenue - totalCost;
+            const topProducts = Object.entries(productSales)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 5)
+                .map(([name, quantity]) => ({ name, quantity }));
+
+            // --- Platform Performance ---
+            const platformStats = {};
+            stockOut.forEach(t => {
+                const p = t.platform || 'Unknown';
+                if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
+                platformStats[p].sales += t.quantity;
+            });
+            stockIn.filter(t => t.type === 'RETURN').forEach(t => {
+                const p = t.platform || 'Unknown';
+                if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
+                platformStats[p].returns += t.quantity;
+            });
+
+            const platformPerformance = Object.entries(platformStats).map(([platform, stats]) => {
+                const percentage = totalUnitsSold > 0 ? (stats.sales / totalUnitsSold) * 100 : 0;
+                const net = stats.sales - stats.returns;
+                return { platform, ...stats, percentage, net };
+            });
+
+            // --- Auto Insights ---
+            const bestSellingProduct = topProducts[0]?.name || 'N/A';
+
+            // Week with highest sales
+            const weeklySales = {};
+            stockOut.forEach(t => {
+                if (!t.date) return;
+                const date = new Date(t.date);
+                if (isNaN(date.getTime())) return;
+                const weekNum = Math.ceil((date.getDate() - 1 - date.getDay()) / 7); // Rough week number
+                if (!weeklySales[weekNum]) weeklySales[weekNum] = 0;
+                weeklySales[weekNum] += t.quantity;
+            });
+            const highestSalesWeek = Object.entries(weeklySales).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+            // Platform with highest sales (Growth proxy)
+            const highestGrowthPlatform = platformPerformance.sort((a, b) => b.sales - a.sales)[0]?.platform || 'N/A';
+
+            // Products with unusual returns (Return rate > 20%)
+            const unusualReturns = [];
+            Object.keys(productSales).forEach(prodName => {
+                const sales = productSales[prodName];
+                const returns = stockIn.filter(t => t.type === 'RETURN' && t.productName === prodName).reduce((sum, t) => sum + t.quantity, 0);
+                if (sales > 5 && (returns / sales) > 0.2) {
+                    unusualReturns.push(prodName);
                 }
             });
 
-            return {
-                name: product.name,
-                category: product.category,
-                closingStock: stock
+            const monthlyInsights = {
+                bestSellingProduct,
+                highestSalesWeek: `Week ${highestSalesWeek}`,
+                highestGrowthPlatform,
+                unusualReturns: unusualReturns.join(', ') || 'None',
+                recommendations: unusualReturns.length > 0 ? `Check quality for: ${unusualReturns.join(', ')}` : 'Promote top performing products.'
             };
-        });
 
-        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn, platformPerformance, monthlyInsights, closingStock };
+            // --- Closing Stock Calculation (Reverse Engineering) ---
+            const [year, month] = selectedMonth.split('-');
+            const lastDayOfMonth = new Date(year, month, 0); // Last day of selected month
+            lastDayOfMonth.setHours(23, 59, 59, 999);
+
+            const closingStock = products.map(product => {
+                let stock = product.currentStock;
+
+                // Find transactions AFTER the selected month
+                const futureTransactions = transactions.stockIn.concat(transactions.stockOut).filter(t => {
+                    if (!t.date) return false;
+                    const tDate = new Date(t.date);
+                    return tDate > lastDayOfMonth && t.productId === product.id;
+                });
+
+                futureTransactions.forEach(t => {
+                    if (t.type === 'IN') {
+                        stock -= t.quantity; // Reverse Stock In
+                    } else if (t.type === 'OUT') {
+                        stock += t.quantity; // Reverse Stock Out
+                    } else if (t.type === 'RETURN') {
+                        stock -= t.quantity; // Reverse Return (which added to stock)
+                    }
+                });
+
+                return {
+                    name: product.name,
+                    category: product.category,
+                    closingStock: stock
+                };
+            });
+
+            return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn, platformPerformance, monthlyInsights, closingStock };
+        } catch (error) {
+            console.error("Error calculating monthly data:", error);
+            return {
+                totalRevenue: 0, totalUnitsSold: 0, profit: 0, topProducts: [],
+                stockOut: [], stockIn: [], totalReturns: 0, totalStockIn: 0,
+                platformPerformance: [], monthlyInsights: {}, closingStock: []
+            };
+        }
     }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform]);
 
     // --- Product Report Logic ---
