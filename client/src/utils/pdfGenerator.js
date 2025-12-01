@@ -98,20 +98,21 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             t.productName,
             t.quantity,
             `RM ${t.sellingPriceAtTime ? t.sellingPriceAtTime.toFixed(2) : '0.00'}`,
-            t.receiverName ? `${t.platform} (${t.receiverName})` : (t.platform || '-'),
+            t.platform || '-',
+            t.receiverName || '-',
             `RM ${(t.quantity * (t.sellingPriceAtTime || 0)).toFixed(2)}`
         ]);
 
         autoTable(doc, {
             startY: y,
-            head: [['Product Name', 'Quantity Sold', 'Price', 'Platform', 'Total Amount']],
+            head: [['Product Name', 'Quantity Sold', 'Price', 'Platform', 'Receiver Name', 'Total Amount']],
             body: salesBody,
             theme: 'grid',
             headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
             styles: { fontSize: 9, cellPadding: 3 },
             columnStyles: {
-                0: { cellWidth: 60 },
-                4: { halign: 'right' }
+                0: { cellWidth: 50 },
+                5: { halign: 'right' }
             }
         });
         y = doc.lastAutoTable.finalY + 10;
