@@ -99,7 +99,60 @@ const Reports = () => {
             .slice(0, 5)
             .map(([name, quantity]) => ({ name, quantity }));
 
-        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn };
+        // --- Platform Performance ---
+        const platformStats = {};
+        stockOut.forEach(t => {
+            const p = t.platform || 'Unknown';
+            if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
+            platformStats[p].sales += t.quantity;
+        });
+        stockIn.filter(t => t.type === 'RETURN').forEach(t => {
+            const p = t.platform || 'Unknown';
+            if (!platformStats[p]) platformStats[p] = { sales: 0, returns: 0 };
+            platformStats[p].returns += t.quantity;
+        });
+
+        const platformPerformance = Object.entries(platformStats).map(([platform, stats]) => {
+            const percentage = totalUnitsSold > 0 ? (stats.sales / totalUnitsSold) * 100 : 0;
+            const net = stats.sales - stats.returns;
+            return { platform, ...stats, percentage, net };
+        });
+
+        // --- Auto Insights ---
+        const bestSellingProduct = topProducts[0]?.name || 'N/A';
+
+        // Week with highest sales
+        const weeklySales = {};
+        stockOut.forEach(t => {
+            const date = new Date(t.date);
+            const weekNum = Math.ceil((date.getDate() - 1 - date.getDay()) / 7); // Rough week number
+            if (!weeklySales[weekNum]) weeklySales[weekNum] = 0;
+            weeklySales[weekNum] += t.quantity;
+        });
+        const highestSalesWeek = Object.entries(weeklySales).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+        // Platform with highest sales (Growth proxy)
+        const highestGrowthPlatform = platformPerformance.sort((a, b) => b.sales - a.sales)[0]?.platform || 'N/A';
+
+        // Products with unusual returns (Return rate > 20%)
+        const unusualReturns = [];
+        Object.keys(productSales).forEach(prodName => {
+            const sales = productSales[prodName];
+            const returns = stockIn.filter(t => t.type === 'RETURN' && t.productName === prodName).reduce((sum, t) => sum + t.quantity, 0);
+            if (sales > 5 && (returns / sales) > 0.2) {
+                unusualReturns.push(prodName);
+            }
+        });
+
+        const monthlyInsights = {
+            bestSellingProduct,
+            highestSalesWeek: `Week ${highestSalesWeek}`,
+            highestGrowthPlatform,
+            unusualReturns: unusualReturns.join(', ') || 'None',
+            recommendations: unusualReturns.length > 0 ? `Check quality for: ${unusualReturns.join(', ')}` : 'Promote top performing products.'
+        };
+
+        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn, platformPerformance, monthlyInsights };
     }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform]);
 
     // --- Product Report Logic ---
@@ -152,9 +205,11 @@ const Reports = () => {
     }, [dailyData]);
 
     const [showPreview, setShowPreview] = useState(false);
+    const [previewType, setPreviewType] = useState('daily'); // 'daily' or 'monthly'
 
     // --- PDF Export Logic ---
     const handleExportDaily = () => {
+        setPreviewType('daily');
         setShowPreview(true);
     };
 
@@ -170,8 +225,15 @@ const Reports = () => {
     };
 
     const handleExportMonthly = () => {
+        setPreviewType('monthly');
+        setShowPreview(true);
+    };
+
+    const confirmExportMonthly = () => {
         try {
-            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform);
+            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform, products);
+            setShowPreview(false);
+            showToast("Report downloaded successfully!", "success");
         } catch (error) {
             console.error("PDF Export Failed:", error);
             showToast("Failed to export PDF: " + error.message, 'error');
@@ -408,18 +470,32 @@ const Reports = () => {
                         <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Report Preview</h3>
 
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <h4 style={{ fontWeight: 'bold', color: '#2563EB' }}>Intelligent Notes</h4>
+                            <h4 style={{ fontWeight: 'bold', color: '#2563EB' }}>
+                                {previewType === 'daily' ? 'Intelligent Notes' : 'Auto Insights'}
+                            </h4>
                             <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-                                <li><strong>Top-selling Platform:</strong> {intelligentNotes.topPlatform}</li>
-                                <li><strong>Lowest Sales Platform:</strong> {intelligentNotes.lowestPlatform}</li>
-                                <li><strong>Highest Return Product:</strong> {intelligentNotes.highestReturnProduct}</li>
-                                <li><strong>Recommendation:</strong> {intelligentNotes.recommendation}</li>
+                                {previewType === 'daily' ? (
+                                    <>
+                                        <li><strong>Top-selling Platform:</strong> {intelligentNotes.topPlatform}</li>
+                                        <li><strong>Lowest Sales Platform:</strong> {intelligentNotes.lowestPlatform}</li>
+                                        <li><strong>Highest Return Product:</strong> {intelligentNotes.highestReturnProduct}</li>
+                                        <li><strong>Recommendation:</strong> {intelligentNotes.recommendation}</li>
+                                    </>
+                                ) : (
+                                    <>
+                                        <li><strong>Best-selling Product:</strong> {monthlyData.monthlyInsights.bestSellingProduct}</li>
+                                        <li><strong>Highest Sales Week:</strong> {monthlyData.monthlyInsights.highestSalesWeek}</li>
+                                        <li><strong>Top Platform:</strong> {monthlyData.monthlyInsights.highestGrowthPlatform}</li>
+                                        <li><strong>Unusual Returns:</strong> {monthlyData.monthlyInsights.unusualReturns}</li>
+                                        <li><strong>Recommendation:</strong> {monthlyData.monthlyInsights.recommendations}</li>
+                                    </>
+                                )}
                             </ul>
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                             <button onClick={() => setShowPreview(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}>Cancel</button>
-                            <button onClick={confirmExportDaily} className="btn-primary">Download PDF</button>
+                            <button onClick={previewType === 'daily' ? confirmExportDaily : confirmExportMonthly} className="btn-primary">Download PDF</button>
                         </div>
                     </div>
                 </div>
