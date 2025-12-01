@@ -290,57 +290,6 @@ const Reports = () => {
         }
     };
 
-    const generateWhatsAppSummary = () => {
-        const date = new Date(selectedDate).toLocaleDateString('en-GB', {
-            day: '2-digit', month: 'short', year: 'numeric'
-        });
-
-        let text = `📊 *Daily Stock Report - ${date}*\n\n`;
-
-        // 1. Sales Breakdown by Platform
-        text += `*Sales Breakdown by Platform*:\n\n`;
-
-        const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
-
-        platforms.forEach(platform => {
-            text += `*${platform}*\n`;
-            const platformSales = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
-            platformSales.forEach(t => {
-                let line = `- ${t.productName}: ${t.quantity}`;
-                if (platform === 'NVS SAMA SAMA' && t.receiverName) {
-                    line += ` (${t.receiverName})`;
-                }
-                text += `${line}\n`;
-            });
-            text += `\n`;
-        });
-
-        // 2. Stock In
-        text += `📦 *Total Stock In*: ${dailyData.totalStockIn} units\n`;
-        const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
-        if (stockInItems.length > 0) {
-            stockInItems.forEach(t => {
-                text += `- ${t.productName}: ${t.quantity}\n`;
-            });
-        } else {
-            text += `- None\n`;
-        }
-        text += `\n`;
-
-        // 3. Returns
-        text += `↩️ *Total Returns*: ${dailyData.totalReturns} units\n`;
-        const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
-        if (returnItems.length > 0) {
-            returnItems.forEach(t => {
-                text += `- ${t.productName}: ${t.quantity} (${t.returnReason || 'No Reason'})\n`;
-            });
-        } else {
-            text += `- None\n`;
-        }
-
-        const encodedText = encodeURIComponent(text);
-        window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-    };
 
     return (
         <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
