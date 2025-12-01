@@ -322,24 +322,29 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
             const minDate = new Date(Math.min(...item.dates)).getDate();
             const maxDate = new Date(Math.max(...item.dates)).getDate();
             const dateRange = minDate === maxDate ? `${minDate}` : `${minDate}-${maxDate}`;
+            const receiverNamesStr = item.receiverNames && item.receiverNames.size > 0
+                ? Array.from(item.receiverNames).join(', ')
+                : '-';
 
-            let displayName = item.productName;
-            if (item.receiverNames && item.receiverNames.size > 0) {
-                displayName += ` (${Array.from(item.receiverNames).join(', ')})`;
-            }
+            // For NVS SAMA SAMA, use Receiver Name in the last column. For others, use Date Range.
+            const lastColumnValue = platform === 'NVS SAMA SAMA' ? receiverNamesStr : dateRange;
 
             return [
-                displayName,
+                item.productName,
                 item.quantity,
                 `RM ${item.price.toFixed(2)}`,
                 `RM ${item.totalAmount.toFixed(2)}`,
-                dateRange
+                lastColumnValue
             ];
         }).sort((a, b) => a[0].localeCompare(b[0]));
 
+        const tableHeaders = platform === 'NVS SAMA SAMA'
+            ? [['Product Name', 'Qty Sold', 'Price', 'Total Amount', 'Receiver Name']]
+            : [['Product Name', 'Qty Sold', 'Price', 'Total Amount', 'Date Range']];
+
         autoTable(doc, {
             startY: y,
-            head: [['Product Name', 'Qty Sold', 'Price', 'Total Amount', 'Date Range']],
+            head: tableHeaders,
             body: tableBody,
             theme: 'grid',
             headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
