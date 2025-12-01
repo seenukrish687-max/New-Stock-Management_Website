@@ -5,7 +5,7 @@ import { API_URL } from '../config';
 const ProductSelectionGrid = ({ products, onSelect, selectedProductId }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredProducts = products.filter(product =>
+    const filteredProducts = (products || []).filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
     );

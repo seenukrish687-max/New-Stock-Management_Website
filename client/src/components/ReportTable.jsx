@@ -50,20 +50,6 @@ const ReportTable = ({ transactions, title, showType = true, showDate = false, s
                                 {showTotal ? (
                                     <td style={{ padding: '0.75rem', fontWeight: 'bold', color: '#333' }}>
                                         {(() => {
-                                            let price = 0;
-                                            if (t.type === 'OUT') {
-                                                price = t.sellingPriceAtTime;
-                                            } else {
-                                                price = t.purchasePriceAtTime;
-                                                // Fallback to current product price if historical price is missing
-                                                if ((price === undefined || price === null || isNaN(price)) && products) {
-                                                    const product = products.find(p => p.id === t.productId);
-                                                    if (product) {
-                                                        price = product.purchasePrice;
-                                                    }
-                                                }
-                                            }
-
                                             if (price === undefined || price === null || isNaN(price)) {
                                                 return '-';
                                             }
