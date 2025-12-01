@@ -268,52 +268,64 @@ const Reports = () => {
 
     const generateWhatsAppSummary = () => {
         const date = selectedDate;
-        let text = `📊 Daily Stock Report - ${date}\n\n`;
+        let text = `DAILY STOCK REPORT – ${date}\n\n`;
 
         // Sales Breakdown
-        text += `Sales Breakdown by Platform:\n\n`;
+        text += `Sales Breakdown (By Platform)\n\n`;
 
         const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
 
         platforms.forEach(platform => {
-            text += `${platform}\n`;
+            text += `Platform: ${platform}\n\n`;
             const platformTransactions = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
 
             platformTransactions.forEach(t => {
-                let line = `- ${t.productName}: ${t.quantity}`;
+                text += `${t.productName} — ${t.quantity} pcs\n`;
                 if ((platform === 'NVS' || platform === 'Sama Sama' || platform === 'NVS SAMA SAMA') && t.receiverName) {
-                    line += ` (${t.receiverName})`;
+                    text += `Receiver: ${t.receiverName}\n`;
                 }
-                text += `${line}\n`;
+                text += `\n`;
             });
-            text += `\n`;
         });
 
         // Stock In Summary
-        text += `📊 Total Stock In: ${dailyData.totalStockIn} units\n`;
+        text += `Stock In Summary\n\n`;
+        text += `Total Stock In: ${dailyData.totalStockIn} units\n\n`;
+        text += `Products Received:\n\n`;
+
         const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
         if (stockInItems.length > 0) {
             stockInItems.forEach(t => {
-                text += `- ${t.productName}: ${t.quantity}\n`;
+                text += `${t.productName} — ${t.quantity}\n\n`;
             });
         } else {
-            text += `- None\n`;
+            text += `None\n\n`;
         }
-        text += `\n`;
 
         // Return Summary
-        text += `📊 Total Returns: ${dailyData.totalReturns} units\n`;
+        text += `Return Summary (By Platform)\n\n`;
+        text += `Total Returns: ${dailyData.totalReturns} units\n\n`;
+
         const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
         if (returnItems.length > 0) {
-            returnItems.forEach(t => {
-                let line = `- ${t.productName}: ${t.quantity}`;
-                if (t.returnReason) {
-                    line += ` (${t.returnReason})`;
-                }
-                text += `${line}\n`;
+            const returnPlatforms = [...new Set(returnItems.map(t => t.platform || 'Unknown'))];
+
+            returnPlatforms.forEach(platform => {
+                text += `Platform: ${platform}\n\n`;
+                const platformReturns = returnItems.filter(t => (t.platform || 'Unknown') === platform);
+
+                platformReturns.forEach(t => {
+                    text += `${t.productName} — ${t.quantity} units\n`;
+                    // Use returnReason as Receiver/Info if available, or receiverName if it exists
+                    const info = t.receiverName || t.returnReason;
+                    if (info) {
+                        text += `Receiver: ${info}\n`;
+                    }
+                    text += `\n`;
+                });
             });
         } else {
-            text += `- None\n`;
+            text += `None\n`;
         }
 
         const encodedText = encodeURIComponent(text);
