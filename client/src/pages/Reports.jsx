@@ -295,87 +295,433 @@ const Reports = () => {
             text += `• 🛑 ${t.productName} — *${t.quantity}\n`;
         });
 
-                        </div >
+        const encodedText = encodeURIComponent(text);
+        window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+    };
 
-    { selectedProductId && (
-        <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
-                    <p style={{ color: '#666', fontWeight: '600', marginBottom: '0.5rem' }}>TOTAL STOCK IN</p>
-                    <h3 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{productData.totalIn}</h3>
+    const handleShareImage = async () => {
+        // Determine the ID and filename based on the active tab
+        let reportId = 'report-content'; // Default for daily
+        let filename = `Daily_Report_${selectedDate}.png`;
+        let title = `Daily Stock Report for ${selectedDate}`;
+
+        if (activeTab === 'monthly') {
+            reportId = 'monthly-report-content';
+            filename = `Monthly_Report_${selectedMonth}.png`;
+            title = `Monthly Stock Report for ${selectedMonth}`;
+        } else if (activeTab === 'product') {
+            reportId = 'product-report-content';
+            const productName = products.find(p => p.id === selectedProductId)?.name || 'Product';
+            filename = `Product_Report_${productName.replace(/\s+/g, '_')}.png`;
+            title = `Product Report for ${productName}`;
+        }
+
+        const reportElement = document.getElementById(reportId);
+        if (!reportElement) {
+            showToast("Report content not found.", "error");
+            return;
+        }
+
+        try {
+            showToast("Generating image...", "info");
+            const canvas = await html2canvas(reportElement, {
+                scale: 2, // Higher quality
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: true
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    showToast("Failed to generate image.", "error");
+                    return;
+                }
+
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                // Check if Web Share API is supported and can share files
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: title,
+                            text: title
+                        });
+                        showToast("Shared successfully!", "success");
+                    } catch (shareError) {
+                        if (shareError.name !== 'AbortError') {
+                            console.error("Share failed:", shareError);
+                            // Fallback to download if share fails (but not if user cancelled)
+                            downloadImage(blob, filename);
+                        }
+                    }
+                } else {
+                    // Fallback for Desktop/Unsupported browsers
+                    downloadImage(blob, filename);
+                }
+            }, 'image/png');
+
+        } catch (error) {
+            console.error("Error generating image:", error);
+            showToast("Error generating image.", "error");
+        }
+    };
+
+    const downloadImage = (blob, filename) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast("Image downloaded. Attach it to WhatsApp Web.", "success");
+        setTimeout(() => window.open('https://wa.me/', '_blank'), 1500);
+    };
+
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewType, setPreviewType] = useState('daily'); // 'daily' or 'monthly'
+
+    // --- PDF Export Logic ---
+    const handleExportDaily = () => {
+        setPreviewType('daily');
+        setShowPreview(true);
+    };
+
+    const confirmExportDaily = () => {
+        try {
+            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes, products);
+            setShowPreview(false);
+            showToast("Report downloaded successfully!", "success");
+        } catch (error) {
+            console.error("PDF Export Failed:", error);
+            showToast("Failed to export PDF: " + error.message, 'error');
+        }
+    };
+
+    const handleExportMonthly = () => {
+        setPreviewType('monthly');
+        setShowPreview(true);
+    };
+
+    const confirmExportMonthly = () => {
+        try {
+            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform, products);
+            setShowPreview(false);
+            showToast("Report downloaded successfully!", "success");
+        } catch (error) {
+            console.error("PDF Export Failed:", error);
+            showToast("Failed to export PDF: " + error.message, 'error');
+        }
+    };
+
+    const handleExportProduct = () => {
+        if (!selectedProductId) return;
+        const product = products.find(p => p.id === selectedProductId);
+        if (product) {
+            try {
+                generateProductReportPDF(productData, product, selectedPlatform);
+            } catch (error) {
+                console.error("PDF Export Failed:", error);
+                showToast("Failed to export PDF: " + error.message, 'error');
+            }
+        }
+    };
+
+    return (
+        <ErrorBoundary>
+            <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1a1a1a', marginBottom: '0.5rem' }}>Reports Dashboard</h2>
+                        <p style={{ color: '#666' }}>Overview of your inventory performance</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        {activeTab === 'daily' && (
+                            <button
+                                className="btn-primary"
+                                onClick={generateWhatsAppSummary}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    backgroundColor: '#25D366', // WhatsApp Green
+                                    boxShadow: '0 4px 6px rgba(37, 211, 102, 0.25)'
+                                }}
+                                title="Share as Text"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                <span>Text</span>
+                            </button>
+                        )}
+
+                        {/* Share Image Button - Available for all tabs */}
+                        <button
+                            className="btn-primary"
+                            onClick={handleShareImage}
+                            disabled={activeTab === 'product' && !selectedProductId}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                backgroundColor: '#128C7E', // WhatsApp Teal
+                                boxShadow: '0 4px 6px rgba(18, 140, 126, 0.25)',
+                                opacity: (activeTab === 'product' && !selectedProductId) ? 0.5 : 1,
+                                cursor: (activeTab === 'product' && !selectedProductId) ? 'not-allowed' : 'pointer'
+                            }}
+                            title="Share as Image"
+                        >
+                            <Camera size={18} />
+                            <span>Image</span>
+                        </button>
+
+                        {(activeTab === 'daily' || activeTab === 'monthly') && (
+                            <button
+                                className="btn-primary"
+                                onClick={activeTab === 'daily' ? handleExportDaily : handleExportMonthly}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(217, 104, 70, 0.25)' }}
+                            >
+                                <FileText size={18} />
+                                <span>Export PDF</span>
+                            </button>
+                        )}
+                    </div>
+                    {activeTab === 'product' && (
+                        <button
+                            className="btn-primary"
+                            onClick={handleExportProduct}
+                            disabled={!selectedProductId}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 4px 6px rgba(217, 104, 70, 0.25)',
+                                opacity: !selectedProductId ? 0.5 : 1,
+                                cursor: !selectedProductId ? 'not-allowed' : 'pointer'
+                            }}
+                            title={!selectedProductId ? "Select a product to export report" : "Export Product Report"}
+                        >
+                            <FileText size={18} />
+                            <span>Export PDF</span>
+                        </button>
+                    )}
                 </div>
-                <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
-                    <p style={{ color: '#666', fontWeight: '600', marginBottom: '0.5rem' }}>TOTAL STOCK OUT</p>
-                    <h3 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{productData.totalOut}</h3>
+
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #eee', paddingBottom: '1px' }}>
+                    {['daily', 'monthly', 'product'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                fontWeight: '600',
+                                color: activeTab === tab ? 'var(--color-primary-accent)' : '#666',
+                                borderBottom: activeTab === tab ? '3px solid var(--color-primary-accent)' : '3px solid transparent',
+                                backgroundColor: 'transparent',
+                                textTransform: 'capitalize',
+                                fontSize: '1rem'
+                            }}
+                        >
+                            {tab} Report
+                        </button>
+                    ))}
                 </div>
-            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-                <button
-                    className="btn-primary"
-                    onClick={handleExportProduct}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                    <FileText size={18} />
-                    <span>Export PDF</span>
-                </button>
-            </div>
+                {/* Filters */}
+                <ReportFilters
+                    activeTab={activeTab}
+                    selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+                    selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth}
+                    filterType={filterType} setFilterType={setFilterType}
+                    products={products}
+                    selectedProductId={selectedProductId}
+                    setSelectedProductId={setSelectedProductId}
+                    selectedPlatform={selectedPlatform}
+                    setSelectedPlatform={setSelectedPlatform}
+                    onRefresh={() => { }}
+                />
 
-            <ReportTable
-                title="Transaction History"
-                transactions={productData.transactions}
-                showDate={true}
-                showType={true}
-                products={products}
-            />
-        </>
-    )}
-                    </div >
+                {/* Selected Product Preview */}
+                {selectedProductId && (activeTab === 'daily' || activeTab === 'monthly') && (
+                    <div className="card" style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                        {(() => {
+                            const product = products ? products.find(p => p.id === selectedProductId) : null;
+                            if (!product) return null;
+                            const data = activeTab === 'daily' ? dailyData : monthlyData;
+
+                            return (
+                                <>
+                                    <div style={{ width: '100px', height: '100px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
+                                        {product.imageURL ? (
+                                            <img
+                                                src={product.imageURL}
+                                                alt={product.name}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/100?text=No+Img'; }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '100%', height: '100%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No Img</div>
+                                        )}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{product.name}</h3>
+                                        <div style={{ display: 'flex', gap: '2rem' }}>
+                                            <div>
+                                                <p style={{ color: '#666', fontSize: '0.875rem' }}>Sales</p>
+                                                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>
+                                                    {activeTab === 'daily' ? `RM ${data.totalSales.toFixed(2)}` : `RM ${data.totalRevenue.toFixed(2)}`}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p style={{ color: '#666', fontSize: '0.875rem' }}>Stock In</p>
+                                                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#8b5cf6' }}>{data.totalStockIn}</p>
+                                            </div>
+                                            <div>
+                                                <p style={{ color: '#666', fontSize: '0.875rem' }}>Stock Out</p>
+                                                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                                                    {activeTab === 'daily' ? data.totalStockOut : data.totalUnitsSold}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p style={{ color: '#666', fontSize: '0.875rem' }}>Returns</p>
+                                                <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>{data.totalReturns}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
                 )}
-{/* Preview Modal */ }
-{
-    showPreview && (
-        <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-        }}>
-            <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '600px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Report Preview</h3>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <h4 style={{ fontWeight: 'bold', color: '#2563EB' }}>
-                        {previewType === 'daily' ? 'Intelligent Notes' : 'Auto Insights'}
-                    </h4>
-                    <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
-                        {previewType === 'daily' ? (
+                {/* Content */}
+                {activeTab === 'daily' && (
+                    <div id="report-content" className="animate-fade-in" style={{ padding: '1rem', backgroundColor: '#fff', borderRadius: '8px' }}>
+                        <ReportStatsCards data={dailyData} type="daily" />
+                        <ReportCharts data={dailyData} type="daily" products={products} />
+                        <ReportTable
+                            title="Daily Transactions"
+                            transactions={[...dailyData.stockIn, ...dailyData.stockOut]}
+                            showTotal={true}
+                            products={products}
+                        />
+                    </div>
+                )}
+
+                {activeTab === 'monthly' && (
+                    <div id="monthly-report-content" className="animate-fade-in" style={{ padding: '1rem', backgroundColor: '#fff', borderRadius: '8px' }}>
+                        <ReportStatsCards data={monthlyData} type="monthly" />
+                        <ReportCharts data={monthlyData} type="monthly" products={products} />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem' }}>
+                            <ReportTable
+                                title="Sales List"
+                                transactions={monthlyData.stockOut}
+                                showTotal={true}
+                                showDate={true}
+                                products={products}
+                            />
+                            <ReportTable
+                                title="Stock In History"
+                                transactions={monthlyData.stockIn}
+                                showDate={true}
+                                products={products}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'product' && (
+                    <div id="product-report-content" className="animate-fade-in" style={{ padding: '1rem', backgroundColor: '#fff', borderRadius: '8px' }}>
+                        <div className="card" style={{ marginBottom: '2rem' }}>
+                            <ProductSelectionGrid
+                                products={products}
+                                onSelect={(p) => setSelectedProductId(p.id)}
+                                selectedProductId={selectedProductId}
+                            />
+                        </div>
+
+                        {selectedProductId && (
                             <>
-                                <li><strong>Top-selling Platform:</strong> {intelligentNotes.topPlatform}</li>
-                                <li><strong>Lowest Sales Platform:</strong> {intelligentNotes.lowestPlatform}</li>
-                                <li><strong>Highest Return Product:</strong> {intelligentNotes.highestReturnProduct}</li>
-                                <li><strong>Recommendation:</strong> {intelligentNotes.recommendation}</li>
-                            </>
-                        ) : (
-                            <>
-                                <li><strong>Best-selling Product:</strong> {monthlyData.monthlyInsights.bestSellingProduct}</li>
-                                <li><strong>Highest Sales Week:</strong> {monthlyData.monthlyInsights.highestSalesWeek}</li>
-                                <li><strong>Top Platform:</strong> {monthlyData.monthlyInsights.highestGrowthPlatform}</li>
-                                <li><strong>Unusual Returns:</strong> {monthlyData.monthlyInsights.unusualReturns}</li>
-                                <li><strong>Recommendation:</strong> {monthlyData.monthlyInsights.recommendations}</li>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                                    <div className="card" style={{ borderLeft: '4px solid #8b5cf6' }}>
+                                        <p style={{ color: '#666', fontWeight: '600', marginBottom: '0.5rem' }}>TOTAL STOCK IN</p>
+                                        <h3 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{productData.totalIn}</h3>
+                                    </div>
+                                    <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                                        <p style={{ color: '#666', fontWeight: '600', marginBottom: '0.5rem' }}>TOTAL STOCK OUT</p>
+                                        <h3 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{productData.totalOut}</h3>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                                    <button
+                                        className="btn-primary"
+                                        onClick={handleExportProduct}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                    >
+                                        <FileText size={18} />
+                                        <span>Export PDF</span>
+                                    </button>
+                                </div>
+
+                                <ReportTable
+                                    title="Transaction History"
+                                    transactions={productData.transactions}
+                                    showDate={true}
+                                    showType={true}
+                                    products={products}
+                                />
                             </>
                         )}
-                    </ul>
-                </div>
+                    </div>
+                )}
+                {/* Preview Modal */}
+                {showPreview && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                    }}>
+                        <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '8px', maxWidth: '600px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Report Preview</h3>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                    <button onClick={() => setShowPreview(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}>Cancel</button>
-                    <button onClick={previewType === 'daily' ? confirmExportDaily : confirmExportMonthly} className="btn-primary">Download PDF</button>
-                </div>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h4 style={{ fontWeight: 'bold', color: '#2563EB' }}>
+                                    {previewType === 'daily' ? 'Intelligent Notes' : 'Auto Insights'}
+                                </h4>
+                                <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
+                                    {previewType === 'daily' ? (
+                                        <>
+                                            <li><strong>Top-selling Platform:</strong> {intelligentNotes.topPlatform}</li>
+                                            <li><strong>Lowest Sales Platform:</strong> {intelligentNotes.lowestPlatform}</li>
+                                            <li><strong>Highest Return Product:</strong> {intelligentNotes.highestReturnProduct}</li>
+                                            <li><strong>Recommendation:</strong> {intelligentNotes.recommendation}</li>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <li><strong>Best-selling Product:</strong> {monthlyData.monthlyInsights.bestSellingProduct}</li>
+                                            <li><strong>Highest Sales Week:</strong> {monthlyData.monthlyInsights.highestSalesWeek}</li>
+                                            <li><strong>Top Platform:</strong> {monthlyData.monthlyInsights.highestGrowthPlatform}</li>
+                                            <li><strong>Unusual Returns:</strong> {monthlyData.monthlyInsights.unusualReturns}</li>
+                                            <li><strong>Recommendation:</strong> {monthlyData.monthlyInsights.recommendations}</li>
+                                        </>
+                                    )}
+                                </ul>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button onClick={() => setShowPreview(false)} style={{ padding: '0.5rem 1rem', border: '1px solid #ccc', borderRadius: '4px', background: 'white' }}>Cancel</button>
+                                <button onClick={previewType === 'daily' ? confirmExportDaily : confirmExportMonthly} className="btn-primary">Download PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
-    )
-}
-            </div >
-        </ErrorBoundary >
+        </ErrorBoundary>
     );
 };
 
