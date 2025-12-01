@@ -54,8 +54,8 @@ const Reports = () => {
 
     // --- Monthly Report Logic ---
     const monthlyData = useMemo(() => {
-        let stockOut = transactions?.stockOut?.filter(t => t.date.startsWith(selectedMonth)) || [];
-        let stockIn = transactions?.stockIn?.filter(t => t.date.startsWith(selectedMonth)) || [];
+        let stockOut = transactions?.stockOut?.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
+        let stockIn = transactions?.stockIn?.filter(t => t.date && t.date.startsWith(selectedMonth)) || [];
 
         if (filterType === 'IN') {
             stockOut = [];
