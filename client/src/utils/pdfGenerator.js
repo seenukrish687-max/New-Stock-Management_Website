@@ -442,6 +442,35 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         columnStyles: { 0: { fontStyle: 'italic' } }
     });
 
+    // 7. Closing Stock Report (Next Month Opening)
+    if (y > 200) { doc.addPage(); y = 20; }
+    y = addSectionTitle(doc, "7. Closing Stock Report (Next Month Opening)", y);
+
+    if (data.closingStock && data.closingStock.length > 0) {
+        const closingStockBody = data.closingStock.map(p => [
+            p.name,
+            p.category,
+            `${p.closingStock} units`
+        ]).sort((a, b) => a[0].localeCompare(b[0]));
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Product Name', 'Category', 'Closing Stock (Next Month Opening)']],
+            body: closingStockBody,
+            theme: 'grid',
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255] },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                2: { halign: 'right', fontStyle: 'bold' }
+            }
+        });
+    } else {
+        doc.setFontSize(10);
+        doc.setTextColor(...TEXT_COLOR);
+        doc.setFont('helvetica', 'italic');
+        doc.text("No closing stock data available.", MARGIN, y + 5);
+    }
+
     addFooter(doc);
     doc.save(`Monthly_Report_${month}.pdf`);
 };

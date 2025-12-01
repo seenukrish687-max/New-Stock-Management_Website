@@ -152,7 +152,43 @@ const Reports = () => {
             recommendations: unusualReturns.length > 0 ? `Check quality for: ${unusualReturns.join(', ')}` : 'Promote top performing products.'
         };
 
-        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn, platformPerformance, monthlyInsights };
+        // --- Closing Stock Calculation (Reverse Engineering) ---
+        // Closing Stock = Current Stock - (Stock In > Month End) + (Stock Out > Month End) - (Returns > Month End)
+        // Actually, simpler: Current Stock is the LIVE stock.
+        // If we want stock at end of selectedMonth:
+        // We need to REVERSE all transactions that happened AFTER the selectedMonth.
+
+        const [year, month] = selectedMonth.split('-');
+        const lastDayOfMonth = new Date(year, month, 0); // Last day of selected month
+        lastDayOfMonth.setHours(23, 59, 59, 999);
+
+        const closingStock = products.map(product => {
+            let stock = product.currentStock;
+
+            // Find transactions AFTER the selected month
+            const futureTransactions = transactions.stockIn.concat(transactions.stockOut).filter(t => {
+                const tDate = new Date(t.date);
+                return tDate > lastDayOfMonth && t.productId === product.id;
+            });
+
+            futureTransactions.forEach(t => {
+                if (t.type === 'IN') {
+                    stock -= t.quantity; // Reverse Stock In
+                } else if (t.type === 'OUT') {
+                    stock += t.quantity; // Reverse Stock Out
+                } else if (t.type === 'RETURN') {
+                    stock -= t.quantity; // Reverse Return (which added to stock)
+                }
+            });
+
+            return {
+                name: product.name,
+                category: product.category,
+                closingStock: stock
+            };
+        });
+
+        return { totalRevenue, totalUnitsSold, profit, topProducts, stockOut, stockIn, totalReturns, totalStockIn, platformPerformance, monthlyInsights, closingStock };
     }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform]);
 
     // --- Product Report Logic ---
