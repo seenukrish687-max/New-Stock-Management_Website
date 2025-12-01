@@ -160,7 +160,7 @@ const Reports = () => {
 
     const confirmExportDaily = () => {
         try {
-            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes);
+            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes, products);
             setShowPreview(false);
             showToast("Report downloaded successfully!", "success");
         } catch (error) {

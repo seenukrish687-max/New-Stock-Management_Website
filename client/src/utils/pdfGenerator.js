@@ -18,9 +18,9 @@ const addHeader = (doc, title, date) => {
     doc.text("Ammachee Stock Management", MARGIN, 20);
 
     // Date
-    doc.setFontSize(10);
+    doc.setFontSize(14); // Larger font
     doc.setTextColor(...TEXT_COLOR);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bold'); // Bold
     doc.text(date, PAGE_WIDTH - MARGIN, 20, { align: 'right' });
 
     // Report Title
@@ -57,7 +57,7 @@ const addSectionTitle = (doc, title, y) => {
     return y + 8;
 };
 
-export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms', intelligentNotes = {}) => {
+export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms', intelligentNotes = {}, products = []) => {
     const doc = new jsPDF();
     let y = addHeader(doc, "Daily Stock Report", date);
 
@@ -187,6 +187,42 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
         styles: { fontSize: 10, cellPadding: 2 },
         columnStyles: { 0: { fontStyle: 'italic' } }
     });
+
+    y = doc.lastAutoTable.finalY + 10;
+
+    // 6. Remaining Stock Breakdown
+    // Check if we need a new page
+    if (y > 200) {
+        doc.addPage();
+        y = 20;
+    }
+
+    y = addSectionTitle(doc, "6. Remaining Stock Breakdown", y);
+
+    if (products && products.length > 0) {
+        const stockBody = products.map(p => [
+            p.name,
+            p.category,
+            `${p.currentStock} units`
+        ]).sort((a, b) => a[0].localeCompare(b[0])); // Sort by product name
+
+        autoTable(doc, {
+            startY: y,
+            head: [['Product Name', 'Category', 'Available Stock']],
+            body: stockBody,
+            theme: 'grid',
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255] },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                2: { halign: 'right', fontStyle: 'bold' }
+            }
+        });
+    } else {
+        doc.setFontSize(10);
+        doc.setTextColor(...TEXT_COLOR);
+        doc.setFont('helvetica', 'italic');
+        doc.text("No product data available.", MARGIN, y + 5);
+    }
 
     addFooter(doc);
     doc.save(`Daily_Report_${date}.pdf`);
