@@ -26,7 +26,7 @@ export const StockProvider = ({ children }) => {
         try {
             const res = await fetch(`${API_URL}/transactions`);
             const data = await res.json();
-            setTransactions(data);
+            setTransactions(data || { stockIn: [], stockOut: [] });
         } catch (error) {
             console.error("Failed to fetch transactions", error);
         }

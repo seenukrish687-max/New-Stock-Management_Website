@@ -12,10 +12,10 @@ const Dashboard = () => {
     const [showLowStockOnly, setShowLowStockOnly] = useState(false);
     const navigate = useNavigate();
 
-    const totalProducts = products.length;
-    const lowStock = products.filter(p => p.currentStock < 10).length;
-    const totalStockIn = transactions.stockIn.length;
-    const totalStockOut = transactions.stockOut.length;
+    const totalProducts = products?.length || 0;
+    const lowStock = products?.filter(p => p.currentStock < 10).length || 0;
+    const totalStockIn = transactions?.stockIn?.length || 0;
+    const totalStockOut = transactions?.stockOut?.length || 0;
 
     // --- Data Processing for Charts ---
 
