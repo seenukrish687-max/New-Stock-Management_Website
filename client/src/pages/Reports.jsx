@@ -290,6 +290,58 @@ const Reports = () => {
         }
     };
 
+    const generateWhatsAppSummary = () => {
+        const date = new Date(selectedDate).toLocaleDateString('en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+
+        let text = `📊 *Daily Stock Report - ${date}*\n\n`;
+
+        // 1. Sales Breakdown by Platform
+        text += `*Sales Breakdown by Platform*:\n\n`;
+
+        const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
+
+        platforms.forEach(platform => {
+            text += `*${platform}*\n`;
+            const platformSales = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
+            platformSales.forEach(t => {
+                let line = `- ${t.productName}: ${t.quantity}`;
+                if (platform === 'NVS SAMA SAMA' && t.receiverName) {
+                    line += ` (${t.receiverName})`;
+                }
+                text += `${line}\n`;
+            });
+            text += `\n`;
+        });
+
+        // 2. Stock In
+        text += `📦 *Total Stock In*: ${dailyData.totalStockIn} units\n`;
+        const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
+        if (stockInItems.length > 0) {
+            stockInItems.forEach(t => {
+                text += `- ${t.productName}: ${t.quantity}\n`;
+            });
+        } else {
+            text += `- None\n`;
+        }
+        text += `\n`;
+
+        // 3. Returns
+        text += `↩️ *Total Returns*: ${dailyData.totalReturns} units\n`;
+        const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
+        if (returnItems.length > 0) {
+            returnItems.forEach(t => {
+                text += `- ${t.productName}: ${t.quantity} (${t.returnReason || 'No Reason'})\n`;
+            });
+        } else {
+            text += `- None\n`;
+        }
+
+        const encodedText = encodeURIComponent(text);
+        window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+    };
+
     return (
         <div className="animate-fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
             {/* Header */}
@@ -298,16 +350,36 @@ const Reports = () => {
                     <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1a1a1a', marginBottom: '0.5rem' }}>Reports Dashboard</h2>
                     <p style={{ color: '#666' }}>Overview of your inventory performance</p>
                 </div>
-                {(activeTab === 'daily' || activeTab === 'monthly') && (
-                    <button
-                        className="btn-primary"
-                        onClick={activeTab === 'daily' ? handleExportDaily : handleExportMonthly}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(217, 104, 70, 0.25)' }}
-                    >
-                        <FileText size={18} />
-                        <span>Export PDF</span>
-                    </button>
-                )}
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    {activeTab === 'daily' && (
+                        <button
+                            className="btn-primary"
+                            onClick={generateWhatsAppSummary}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                backgroundColor: '#25D366', // WhatsApp Green
+                                boxShadow: '0 4px 6px rgba(37, 211, 102, 0.25)'
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                            </svg>
+                            <span>Share to WhatsApp</span>
+                        </button>
+                    )}
+                    {(activeTab === 'daily' || activeTab === 'monthly') && (
+                        <button
+                            className="btn-primary"
+                            onClick={activeTab === 'daily' ? handleExportDaily : handleExportMonthly}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(217, 104, 70, 0.25)' }}
+                        >
+                            <FileText size={18} />
+                            <span>Export PDF</span>
+                        </button>
+                    )}
+                </div>
                 {activeTab === 'product' && (
                     <button
                         className="btn-primary"
