@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useStock } from '../context/StockContext';
 import { useToast } from '../context/ToastContext';
-import { FileText, Camera } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import ReportStatsCards from '../components/ReportStatsCards';
 import ReportCharts from '../components/ReportCharts';
 import ReportTable from '../components/ReportTable';
 import ReportFilters from '../components/ReportFilters';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import { generateDailyReportPDF, generateMonthlyReportPDF, generateProductReportPDF } from '../utils/pdfGenerator';
-import html2canvas from 'html2canvas';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 const Reports = () => {
@@ -274,110 +273,57 @@ const Reports = () => {
         text += `✔️ Easy to read\n`;
         text += `✔️ Clean breakdown with icons\n\n`;
 
-        // Sales Breakdown
-        text += `💻 Platform: ${selectedPlatform === 'All Platforms' ? 'All' : selectedPlatform}\n`;
-        dailyData.stockOut.forEach(t => {
-            text += `• 🧺 ${t.productName} — ${t.quantity} pcs\n`;
-        });
-        text += `\n`;
+        // Sales Breakdown (By Platform)
+        text += `🛒 Sales Breakdown (By Platform)\n\n`;
 
-        // Stock In
-        text += `📦 Total Stock In: ${dailyData.totalStockIn} units\n`;
+        const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
+
+        platforms.forEach(platform => {
+            text += `💻 Platform: ${platform}\n`;
+            const platformTransactions = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
+
+            platformTransactions.forEach(t => {
+                text += `• 🧺 ${t.productName} — ${t.quantity} pcs\n`;
+                if ((platform === 'NVS' || platform === 'Sama Sama' || platform === 'NVS SAMA SAMA') && t.receiverName) {
+                    text += `  👤 Receiver: ${t.receiverName}\n`;
+                }
+            });
+            text += `\n`;
+        });
+
+        // Stock In Summary
+        text += `📥 Stock In Summary\n\n`;
+        text += `📦 Total Stock In: ${dailyData.totalStockIn} units\n\n`;
+
         text += `➡️ Products Received\n`;
-        dailyData.stockIn.filter(t => t.type === 'IN').forEach(t => {
-            text += `• 📌 ${t.productName} — ${t.quantity}\n`;
-        });
+        const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
+        if (stockInItems.length > 0) {
+            stockInItems.forEach(t => {
+                text += `• 📌 ${t.productName} — ${t.quantity}\n`;
+            });
+        } else {
+            text += `• None\n`;
+        }
         text += `\n`;
 
-        // Returns
-        text += `↩️ Total Returns: ${dailyData.totalReturns} units\n`;
-        dailyData.stockIn.filter(t => t.type === 'RETURN').forEach(t => {
-            text += `• 🛑 ${t.productName} — *${t.quantity}\n`;
-        });
+        // Return Summary
+        text += `🔄 Return Summary\n\n`;
+        text += `↩️ Total Returns: ${dailyData.totalReturns} units\n\n`;
+
+        const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
+        if (returnItems.length > 0) {
+            returnItems.forEach(t => {
+                text += `• 🛑 ${t.productName} — *${t.quantity}\n`;
+            });
+        } else {
+            text += `• None\n`;
+        }
+        text += `\n`;
+
+        text += `✅ End of Report`;
 
         const encodedText = encodeURIComponent(text);
         window.open(`https://wa.me/?text=${encodedText}`, '_blank');
-    };
-
-    const handleShareImage = async () => {
-        // Determine the ID and filename based on the active tab
-        let reportId = 'report-content'; // Default for daily
-        let filename = `Daily_Report_${selectedDate}.png`;
-        let title = `Daily Stock Report for ${selectedDate}`;
-
-        if (activeTab === 'monthly') {
-            reportId = 'monthly-report-content';
-            filename = `Monthly_Report_${selectedMonth}.png`;
-            title = `Monthly Stock Report for ${selectedMonth}`;
-        } else if (activeTab === 'product') {
-            reportId = 'product-report-content';
-            const productName = products.find(p => p.id === selectedProductId)?.name || 'Product';
-            filename = `Product_Report_${productName.replace(/\s+/g, '_')}.png`;
-            title = `Product Report for ${productName}`;
-        }
-
-        const reportElement = document.getElementById(reportId);
-        if (!reportElement) {
-            showToast("Report content not found.", "error");
-            return;
-        }
-
-        try {
-            showToast("Generating image...", "info");
-            const canvas = await html2canvas(reportElement, {
-                scale: 2, // Higher quality
-                backgroundColor: '#ffffff',
-                logging: false,
-                useCORS: true
-            });
-
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    showToast("Failed to generate image.", "error");
-                    return;
-                }
-
-                const file = new File([blob], filename, { type: 'image/png' });
-
-                // Check if Web Share API is supported and can share files
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: title,
-                            text: title
-                        });
-                        showToast("Shared successfully!", "success");
-                    } catch (shareError) {
-                        if (shareError.name !== 'AbortError') {
-                            console.error("Share failed:", shareError);
-                            // Fallback to download if share fails (but not if user cancelled)
-                            downloadImage(blob, filename);
-                        }
-                    }
-                } else {
-                    // Fallback for Desktop/Unsupported browsers
-                    downloadImage(blob, filename);
-                }
-            }, 'image/png');
-
-        } catch (error) {
-            console.error("Error generating image:", error);
-            showToast("Error generating image.", "error");
-        }
-    };
-
-    const downloadImage = (blob, filename) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        showToast("Image downloaded. Attach it to WhatsApp Web.", "success");
-        setTimeout(() => window.open('https://wa.me/', '_blank'), 1500);
     };
 
     const [showPreview, setShowPreview] = useState(false);
@@ -458,26 +404,6 @@ const Reports = () => {
                                 <span>Text</span>
                             </button>
                         )}
-
-                        {/* Share Image Button - Available for all tabs */}
-                        <button
-                            className="btn-primary"
-                            onClick={handleShareImage}
-                            disabled={activeTab === 'product' && !selectedProductId}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                backgroundColor: '#128C7E', // WhatsApp Teal
-                                boxShadow: '0 4px 6px rgba(18, 140, 126, 0.25)',
-                                opacity: (activeTab === 'product' && !selectedProductId) ? 0.5 : 1,
-                                cursor: (activeTab === 'product' && !selectedProductId) ? 'not-allowed' : 'pointer'
-                            }}
-                            title="Share as Image"
-                        >
-                            <Camera size={18} />
-                            <span>Image</span>
-                        </button>
 
                         {(activeTab === 'daily' || activeTab === 'monthly') && (
                             <button
