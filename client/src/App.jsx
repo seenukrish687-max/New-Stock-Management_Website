@@ -11,30 +11,43 @@ import StockOut from './pages/StockOut';
 import Reports from './pages/Reports';
 import ReturnProduct from './pages/ReturnProduct';
 
+import { AuthProvider } from './context/AuthContext';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <StockProvider>
-          <Router>
-            <div className="layout-container">
-              <Sidebar />
-              <main className="main-content">
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/stock-in" element={<StockIn />} />
-                  <Route path="/stock-out" element={<StockOut />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/return" element={<ReturnProduct />} />
-                </Routes>
-              </main>
-            </div>
-          </Router>
-        </StockProvider>
-      </ToastProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <StockProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <div className="layout-container">
+                      <Sidebar />
+                      <main className="main-content">
+                        <Routes>
+                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/products" element={<Products />} />
+                          <Route path="/stock-in" element={<StockIn />} />
+                          <Route path="/stock-out" element={<StockOut />} />
+                          <Route path="/reports" element={<Reports />} />
+                          <Route path="/return" element={<ReturnProduct />} />
+                        </Routes>
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </Router>
+          </StockProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

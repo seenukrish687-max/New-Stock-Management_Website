@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun, RotateCcw, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun, RotateCcw, Menu, X, LogOut } from 'lucide-react';
 import { useStock } from '../context/StockContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar = () => {
     const location = useLocation();
     const { resetData } = useStock();
     const { theme, toggleTheme } = useTheme();
     const { showToast } = useToast();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -144,6 +153,40 @@ const Sidebar = () => {
                     <Trash2 size={20} />
                     <span>Reset Data</span>
                 </button>
+
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', padding: '0 0.5rem' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                            {user?.username?.[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                            <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>{user?.username}</p>
+                            <p style={{ fontSize: '0.75rem', opacity: 0.7, textTransform: 'capitalize' }}>{user?.role}</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            width: '100%',
+                            textAlign: 'left',
+                            transition: 'background-color 0.2s'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                    >
+                        <LogOut size={20} />
+                        <span>Sign Out</span>
+                    </button>
+                </div>
             </aside>
         </>
     );
