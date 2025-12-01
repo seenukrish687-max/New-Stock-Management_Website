@@ -268,59 +268,53 @@ const Reports = () => {
 
     const generateWhatsAppSummary = () => {
         const date = selectedDate;
-        let text = `🔰 📊 DAILY STOCK REPORT – ${date}\n\n`;
-        text += `✔️ Auto-formatted for WhatsApp Groups\n`;
-        text += `✔️ Easy to read\n`;
-        text += `✔️ Clean breakdown with icons\n\n`;
+        let text = `📊 Daily Stock Report - ${date}\n\n`;
 
-        // Sales Breakdown (By Platform)
-        text += `🛒 Sales Breakdown (By Platform)\n\n`;
+        // Sales Breakdown
+        text += `Sales Breakdown by Platform:\n\n`;
 
         const platforms = [...new Set(dailyData.stockOut.map(t => t.platform || 'Unknown'))];
 
         platforms.forEach(platform => {
-            text += `💻 Platform: ${platform}\n`;
+            text += `${platform}\n`;
             const platformTransactions = dailyData.stockOut.filter(t => (t.platform || 'Unknown') === platform);
 
             platformTransactions.forEach(t => {
-                text += `• 🧺 ${t.productName} — ${t.quantity} pcs\n`;
+                let line = `- ${t.productName}: ${t.quantity}`;
                 if ((platform === 'NVS' || platform === 'Sama Sama' || platform === 'NVS SAMA SAMA') && t.receiverName) {
-                    text += `  👤 Receiver: ${t.receiverName}\n`;
+                    line += ` (${t.receiverName})`;
                 }
+                text += `${line}\n`;
             });
             text += `\n`;
         });
 
         // Stock In Summary
-        text += `📥 Stock In Summary\n\n`;
-        text += `📦 Total Stock In: ${dailyData.totalStockIn} units\n\n`;
-
-        text += `➡️ Products Received\n`;
+        text += `📊 Total Stock In: ${dailyData.totalStockIn} units\n`;
         const stockInItems = dailyData.stockIn.filter(t => t.type === 'IN');
         if (stockInItems.length > 0) {
             stockInItems.forEach(t => {
-                text += `• 📌 ${t.productName} — ${t.quantity}\n`;
+                text += `- ${t.productName}: ${t.quantity}\n`;
             });
         } else {
-            text += `• None\n`;
+            text += `- None\n`;
         }
         text += `\n`;
 
         // Return Summary
-        text += `🔄 Return Summary\n\n`;
-        text += `↩️ Total Returns: ${dailyData.totalReturns} units\n\n`;
-
+        text += `📊 Total Returns: ${dailyData.totalReturns} units\n`;
         const returnItems = dailyData.stockIn.filter(t => t.type === 'RETURN');
         if (returnItems.length > 0) {
             returnItems.forEach(t => {
-                text += `• 🛑 ${t.productName} — *${t.quantity}\n`;
+                let line = `- ${t.productName}: ${t.quantity}`;
+                if (t.returnReason) {
+                    line += ` (${t.returnReason})`;
+                }
+                text += `${line}\n`;
             });
         } else {
-            text += `• None\n`;
+            text += `- None\n`;
         }
-        text += `\n`;
-
-        text += `✅ End of Report`;
 
         const encodedText = encodeURIComponent(text);
         window.open(`https://wa.me/?text=${encodedText}`, '_blank');
