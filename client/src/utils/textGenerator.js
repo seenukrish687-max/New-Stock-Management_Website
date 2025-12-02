@@ -57,7 +57,18 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
 
     // 3. Returns (Global/Total as per request context)
     const returnTransactions = stockIn.filter(t => t.type === 'RETURN');
-    const returnsList = aggregateByProduct(returnTransactions);
+
+    // Custom aggregator for returns to include notes
+    const formatReturns = (transactions) => {
+        if (transactions.length === 0) return [];
+        return transactions.map(t => {
+            const name = t.productName || 'Unknown Product';
+            const note = t.notes ? ` (Note: ${t.notes})` : '';
+            return `${name} — ${t.quantity} pcs${note}`;
+        });
+    };
+
+    const returnsList = formatReturns(returnTransactions);
 
     content += `📥 Total Stock In\n\n`;
     content += `${totalStockIn}\n\n`;
