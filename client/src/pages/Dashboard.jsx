@@ -11,6 +11,16 @@ const Dashboard = () => {
     const { products, transactions } = useStock();
     const [showLowStockOnly, setShowLowStockOnly] = useState(false);
     const navigate = useNavigate();
+    const [connectionStatus, setConnectionStatus] = useState('Checking...');
+
+    React.useEffect(() => {
+        fetch(`${API_URL}/api/products`)
+            .then(res => {
+                if (res.ok) setConnectionStatus('Connected');
+                else setConnectionStatus(`Error: ${res.status}`);
+            })
+            .catch(err => setConnectionStatus(`Failed: ${err.message}`));
+    }, []);
 
     const totalProducts = products?.length || 0;
     const lowStock = products?.filter(p => p.currentStock < 10).length || 0;
@@ -100,6 +110,11 @@ const Dashboard = () => {
 
     return (
         <div className="animate-fade-in">
+            <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', border: '1px solid #ffeeba' }}>
+                <strong>Debug Info:</strong><br />
+                API URL: {API_URL}<br />
+                Status: {connectionStatus}
+            </div>
             <h2 style={{ marginBottom: '2rem', fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--color-text-main)' }}>Dashboard</h2>
 
             <div style={{
