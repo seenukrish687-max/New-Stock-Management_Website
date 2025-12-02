@@ -8,6 +8,7 @@ import ReportTable from '../components/ReportTable';
 import ReportFilters from '../components/ReportFilters';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import { generateDailyReportPDF, generateMonthlyReportPDF, generateProductReportPDF } from '../utils/pdfGenerator';
+import { generateDailyReportText, downloadTextFile } from '../utils/textGenerator';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 const Reports = () => {
@@ -286,6 +287,18 @@ const Reports = () => {
         }
     };
 
+    const handleExportText = () => {
+        try {
+            const textContent = generateDailyReportText(dailyData, selectedDate, selectedPlatform);
+            const filename = `Daily_Report_${selectedDate}.txt`;
+            downloadTextFile(textContent, filename);
+            showToast("Text report downloaded successfully!", "success");
+        } catch (error) {
+            console.error("Text Export Failed:", error);
+            showToast("Failed to export text report: " + error.message, 'error');
+        }
+    };
+
     const handleExportMonthly = () => {
         setPreviewType('monthly');
         setShowPreview(true);
@@ -333,6 +346,16 @@ const Reports = () => {
                             >
                                 <FileText size={18} />
                                 <span>Export PDF</span>
+                            </button>
+                        )}
+                        {activeTab === 'daily' && (
+                            <button
+                                className="btn-secondary"
+                                onClick={handleExportText}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}
+                            >
+                                <FileText size={18} />
+                                <span>Export Text</span>
                             </button>
                         )}
                     </div>
@@ -567,7 +590,7 @@ const Reports = () => {
                     </div>
                 )}
             </div>
-        </ErrorBoundary>
+        </ErrorBoundary >
     );
 };
 
