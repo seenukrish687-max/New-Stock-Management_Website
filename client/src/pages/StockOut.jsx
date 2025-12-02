@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStock } from '../context/StockContext';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import { useToast } from '../context/ToastContext';
+import { soundManager } from '../utils/soundManager';
 
 const StockOut = () => {
     const { products, addStockOut } = useStock();
@@ -21,15 +22,20 @@ const StockOut = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isSubmitting) return;
-        if (!formData.productId) return showToast('Please select a product', 'error');
+        if (!formData.productId) {
+            soundManager.playError();
+            return showToast('Please select a product', 'error');
+        }
 
         if (selectedProduct && parseInt(formData.quantity) > selectedProduct.currentStock) {
+            soundManager.playError();
             return showToast('Error: Insufficient stock!', 'error');
         }
 
         try {
             setIsSubmitting(true);
             await addStockOut(formData);
+            soundManager.playSuccess();
             showToast('Stock out recorded successfully!', 'success');
             setFormData({
                 productId: '',
@@ -42,6 +48,7 @@ const StockOut = () => {
             });
             setSelectedProduct(null);
         } catch (error) {
+            soundManager.playError();
             showToast(error.message, 'error');
         } finally {
             setIsSubmitting(false);
@@ -57,6 +64,7 @@ const StockOut = () => {
                     <ProductSelectionGrid
                         products={products}
                         onSelect={(p) => {
+                            soundManager.playClick();
                             setFormData({ ...formData, productId: p.id });
                             setSelectedProduct(p);
                         }}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStock } from '../context/StockContext';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import { useToast } from '../context/ToastContext';
+import { soundManager } from '../utils/soundManager';
 
 const StockIn = () => {
     const { products, addStockIn } = useStock();
@@ -19,11 +20,15 @@ const StockIn = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isSubmitting) return;
-        if (!formData.productId) return showToast('Please select a product', 'error');
+        if (!formData.productId) {
+            soundManager.playError();
+            return showToast('Please select a product', 'error');
+        }
 
         setIsSubmitting(true);
         await addStockIn(formData);
         setIsSubmitting(false);
+        soundManager.playSuccess();
         showToast('Stock added successfully!', 'success');
         setFormData({
             productId: '',
@@ -44,6 +49,7 @@ const StockIn = () => {
                     <ProductSelectionGrid
                         products={products}
                         onSelect={(p) => {
+                            soundManager.playClick();
                             setFormData({ ...formData, productId: p.id });
                             setSelectedProduct(p);
                         }}

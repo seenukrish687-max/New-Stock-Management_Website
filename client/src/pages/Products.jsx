@@ -6,6 +6,7 @@ import { Plus, X, Upload, Trash2, Edit2, FileText } from 'lucide-react';
 import { API_URL } from '../config';
 import { getCategoryColor } from '../utils/colors';
 import { generateProductReportPDF } from '../utils/pdfGenerator';
+import { soundManager } from '../utils/soundManager';
 
 const Products = () => {
     const { products, addProduct, deleteProduct, updateProduct, transactions } = useStock();
@@ -55,6 +56,7 @@ const Products = () => {
 
         try {
             await addProduct(data);
+            soundManager.playSuccess();
             showToast('Product added successfully!', 'success');
             setShowForm(false);
             setFormData({
@@ -67,6 +69,7 @@ const Products = () => {
             });
             setPreview(null);
         } catch (error) {
+            soundManager.playError();
             showToast('Failed to add product', 'error');
         } finally {
             setIsSubmitting(false);

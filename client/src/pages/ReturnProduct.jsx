@@ -3,6 +3,7 @@ import { useStock } from '../context/StockContext';
 import ProductSelectionGrid from '../components/ProductSelectionGrid';
 import { useToast } from '../context/ToastContext';
 import { RotateCcw } from 'lucide-react';
+import { soundManager } from '../utils/soundManager';
 
 const ReturnProduct = () => {
     const { products, addReturn } = useStock();
@@ -20,11 +21,15 @@ const ReturnProduct = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isSubmitting) return;
-        if (!formData.productId) return showToast('Please select a product', 'error');
+        if (!formData.productId) {
+            soundManager.playError();
+            return showToast('Please select a product', 'error');
+        }
 
         setIsSubmitting(true);
         try {
             await addReturn(formData);
+            soundManager.playSuccess();
             showToast('Product returned successfully!', 'success');
             setFormData({
                 productId: '',
@@ -35,6 +40,7 @@ const ReturnProduct = () => {
                 notes: ''
             });
         } catch (error) {
+            soundManager.playError();
             showToast('Failed to return product', 'error');
         } finally {
             setIsSubmitting(false);
@@ -54,7 +60,10 @@ const ReturnProduct = () => {
                 <form onSubmit={handleSubmit}>
                     <ProductSelectionGrid
                         products={products}
-                        onSelect={(p) => setFormData({ ...formData, productId: p.id })}
+                        onSelect={(p) => {
+                            soundManager.playClick();
+                            setFormData({ ...formData, productId: p.id });
+                        }}
                         selectedProductId={formData.productId}
                     />
 
