@@ -11,30 +11,55 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
         return Object.entries(map).map(([name, qty]) => `${name} — ${qty} pcs`);
     };
 
-    // 1. Stock Summary (Merged) - Sales (Stock Out)
-    // "List each unique product only once"
-    const salesList = aggregateByProduct(stockOut);
+    // Build the report content
+    let content = `📅 DAILY STOCK REPORT – ${selectedDate}\n\n`;
 
-    // 2. Stock In
+    if (selectedPlatform === 'All Platforms') {
+        content += `🏷️ Platform: All Platforms (Breakdown)\n\n`;
+
+        // Get unique platforms from stockOut
+        const platforms = [...new Set(stockOut.map(t => t.platform || 'Unknown'))].sort();
+
+        if (platforms.length === 0) {
+            content += `📦 Stock Summary\nNo sales recorded.\n\n`;
+        } else {
+            platforms.forEach(platform => {
+                const platformSales = stockOut.filter(t => (t.platform || 'Unknown') === platform);
+                if (platformSales.length > 0) {
+                    const salesList = aggregateByProduct(platformSales);
+                    content += `----------------------------------------\n`;
+                    content += `🏷️ Platform: ${platform}\n`;
+                    content += `📦 Stock Summary\n\n`;
+                    content += salesList.join('\n\n');
+                    content += `\n\n`;
+                }
+            });
+            content += `----------------------------------------\n`; // Separator before totals
+        }
+
+    } else {
+        // Single Platform Mode
+        const salesList = aggregateByProduct(stockOut);
+        content += `🏷️ Platform: ${selectedPlatform}\n`;
+        content += `📦 Stock Summary (Merged)\n\n`;
+
+        if (salesList.length > 0) {
+            content += salesList.join('\n\n');
+        } else {
+            content += "No sales recorded.";
+        }
+        content += `\n\n`;
+    }
+
+    // 2. Stock In (Global/Total as per request context)
     const stockInTransactions = stockIn.filter(t => t.type === 'IN');
     const stockInList = aggregateByProduct(stockInTransactions);
 
-    // 3. Returns
+    // 3. Returns (Global/Total as per request context)
     const returnTransactions = stockIn.filter(t => t.type === 'RETURN');
     const returnsList = aggregateByProduct(returnTransactions);
 
-    // Build the report content
-    let content = `📅 DAILY STOCK REPORT – ${selectedDate}\n\n`;
-    content += `🏷️ Platform: ${selectedPlatform}\n`;
-    content += `📦 Stock Summary (Merged)\n\n`;
-
-    if (salesList.length > 0) {
-        content += salesList.join('\n\n');
-    } else {
-        content += "No sales recorded.";
-    }
-
-    content += `\n\n📥 Total Stock In\n\n`;
+    content += `📥 Total Stock In\n\n`;
     content += `${totalStockIn}\n\n`;
     if (stockInList.length > 0) {
         content += stockInList.join('\n\n');
