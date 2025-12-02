@@ -1,3 +1,18 @@
+// Helper to convert text to Unicode Sans-Serif Bold
+const toBold = (text) => {
+    const diffUpper = 0x1D5D4 - 'A'.charCodeAt(0);
+    const diffLower = 0x1D5EE - 'a'.charCodeAt(0);
+    const diffDigit = 0x1D7E2 - '0'.charCodeAt(0);
+
+    return text.split('').map(char => {
+        const code = char.charCodeAt(0);
+        if (code >= 65 && code <= 90) return String.fromCodePoint(code + diffUpper);
+        if (code >= 97 && code <= 122) return String.fromCodePoint(code + diffLower);
+        if (code >= 48 && code <= 57) return String.fromCodePoint(code + diffDigit);
+        return char;
+    }).join('');
+};
+
 export const generateDailyReportText = (dailyData, selectedDate, selectedPlatform) => {
     const { stockIn, stockOut, totalStockIn, totalReturns } = dailyData;
 
@@ -12,24 +27,24 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
     };
 
     // Build the report content
-    let content = `📅 DAILY STOCK REPORT – ${selectedDate}\n\n`;
+    let content = `${toBold('📅 DAILY STOCK REPORT')} – ${selectedDate}\n\n`;
 
     if (selectedPlatform === 'All Platforms') {
-        content += `🏷️ Platform: All Platforms (Breakdown)\n\n`;
+        content += `${toBold('🏷️ Platform:')} All Platforms (Breakdown)\n\n`;
 
         // Get unique platforms from stockOut
         const platforms = [...new Set(stockOut.map(t => t.platform || 'Unknown'))].sort();
 
         if (platforms.length === 0) {
-            content += `📦 Stock Summary\nNo sales recorded.\n\n`;
+            content += `${toBold('📦 Stock Summary')}\nNo sales recorded.\n\n`;
         } else {
             platforms.forEach(platform => {
                 const platformSales = stockOut.filter(t => (t.platform || 'Unknown') === platform);
                 if (platformSales.length > 0) {
                     const salesList = aggregateByProduct(platformSales);
                     content += `----------------------------------------\n`;
-                    content += `🏷️ Platform: ${platform}\n`;
-                    content += `📦 Stock Summary\n\n`;
+                    content += `${toBold('🏷️ Platform:')} ${platform}\n`;
+                    content += `${toBold('📦 Stock Summary')}\n\n`;
                     content += salesList.join('\n\n');
                     content += `\n\n`;
                 }
@@ -40,8 +55,8 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
     } else {
         // Single Platform Mode
         const salesList = aggregateByProduct(stockOut);
-        content += `🏷️ Platform: ${selectedPlatform}\n`;
-        content += `📦 Stock Summary (Merged)\n\n`;
+        content += `${toBold('🏷️ Platform:')} ${selectedPlatform}\n`;
+        content += `${toBold('📦 Stock Summary (Merged)')}\n\n`;
 
         if (salesList.length > 0) {
             content += salesList.join('\n\n');
@@ -70,13 +85,13 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
 
     const returnsList = formatReturns(returnTransactions);
 
-    content += `📥 Total Stock In\n\n`;
+    content += `${toBold('📥 Total Stock In')}\n\n`;
     content += `${totalStockIn}\n\n`;
     if (stockInList.length > 0) {
         content += stockInList.join('\n\n');
     }
 
-    content += `\n\n🔄 Total Returns\n\n`;
+    content += `\n\n${toBold('🔄 Total Returns')}\n\n`;
     content += `${totalReturns}\n\n`;
     if (returnsList.length > 0) {
         content += returnsList.join('\n\n');
