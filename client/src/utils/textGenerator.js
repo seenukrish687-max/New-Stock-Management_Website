@@ -23,7 +23,7 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
             const name = t.productName || 'Unknown Product';
             map[name] = (map[name] || 0) + t.quantity;
         });
-        return Object.entries(map).map(([name, qty]) => `${name} — ${qty} pcs`);
+        return Object.entries(map).map(([name, qty]) => `${toBold(name)} — ${qty} pcs`);
     };
 
     // Build the report content
@@ -79,19 +79,21 @@ export const generateDailyReportText = (dailyData, selectedDate, selectedPlatfor
         return transactions.map(t => {
             const name = t.productName || 'Unknown Product';
             const note = t.notes ? ` (Note: ${t.notes})` : '';
-            return `${name} — ${t.quantity} pcs${note}`;
+            return `${toBold(name)} — ${t.quantity} pcs${note}`;
         });
     };
 
     const returnsList = formatReturns(returnTransactions);
 
+    content += `----------------------------------------\n`;
     content += `${toBold('📥 Total Stock In')}\n\n`;
     content += `${totalStockIn}\n\n`;
     if (stockInList.length > 0) {
         content += stockInList.join('\n\n');
     }
 
-    content += `\n\n${toBold('🔄 Total Returns')}\n\n`;
+    content += `\n\n----------------------------------------\n`;
+    content += `${toBold('🔄 Total Returns')}\n\n`;
     content += `${totalReturns}\n\n`;
     if (returnsList.length > 0) {
         content += returnsList.join('\n\n');
