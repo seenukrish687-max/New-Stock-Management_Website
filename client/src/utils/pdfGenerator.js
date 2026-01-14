@@ -4,36 +4,37 @@ import autoTable from 'jspdf-autotable';
 // Constants for layout
 const MARGIN = 15;
 const PAGE_WIDTH = 210; // A4 width in mm
-const PRIMARY_COLOR = [37, 99, 235]; // #2563EB (Blue)
-const SECONDARY_COLOR = [31, 41, 55]; // #1F2937 (Dark Gray)
-const TEXT_COLOR = [31, 41, 55]; // #1F2937
-const LIGHT_BG = [241, 245, 249]; // #F1F5F9 (Light Gray)
+const PRIMARY_COLOR = [217, 104, 70]; // #D96846 (Brand Orange)
+const SECONDARY_COLOR = [47, 48, 32]; // #2F3020 (Dark Accent)
+const TEXT_COLOR = [47, 48, 32];
+const LIGHT_BG = [252, 247, 245]; // Very light orange/grey tint
+const BOX_BG = [255, 255, 255]; // White for boxes
 
 // Helper to add header
 const addHeader = (doc, title, date) => {
+    // Top Bar Background
+    doc.setFillColor(...SECONDARY_COLOR);
+    doc.rect(0, 0, PAGE_WIDTH, 45, 'F');
+
     // Company Name
-    doc.setFontSize(22);
-    doc.setTextColor(...PRIMARY_COLOR);
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.text("Ammachee Stock Management", MARGIN, 20);
 
+    // Report Title
+    doc.setFontSize(14);
+    doc.setTextColor(217, 104, 70); // Orange text
+    doc.setFont('helvetica', 'bold');
+    doc.text(title.toUpperCase(), MARGIN, 32);
+
     // Date
-    doc.setFontSize(14); // Larger font
-    doc.setTextColor(...TEXT_COLOR);
-    doc.setFont('helvetica', 'bold'); // Bold
+    doc.setFontSize(11);
+    doc.setTextColor(200, 200, 200);
+    doc.setFont('helvetica', 'normal');
     doc.text(date, PAGE_WIDTH - MARGIN, 20, { align: 'right' });
 
-    // Report Title
-    doc.setFontSize(16);
-    doc.setTextColor(...SECONDARY_COLOR);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title, MARGIN, 30);
-
-    // Divider Line
-    doc.setDrawColor(200);
-    doc.line(MARGIN, 35, PAGE_WIDTH - MARGIN, 35);
-
-    return 45; // Return Y position for next content
+    return 60; // Return Y position for next content
 };
 
 // Helper to add footer
@@ -50,12 +51,18 @@ const addFooter = (doc) => {
 
 // Helper to add section title
 const addSectionTitle = (doc, title, y) => {
-    doc.setFontSize(14);
-    doc.setTextColor(...PRIMARY_COLOR);
+    doc.setFontSize(13);
+    doc.setTextColor(...SECONDARY_COLOR);
     doc.setFont('helvetica', 'bold');
-    doc.text(title, MARGIN, y);
-    return y + 8;
+    doc.text(title.toUpperCase(), MARGIN, y);
+    // Underline
+    doc.setDrawColor(...PRIMARY_COLOR);
+    doc.setLineWidth(1);
+    doc.line(MARGIN, y + 2, MARGIN + 20, y + 2);
+    return y + 10;
 };
+
+
 
 export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms', intelligentNotes = {}, products = [], accountFilter = 'All Accounts') => {
     const doc = new jsPDF();
@@ -75,21 +82,27 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
     ];
 
     const boxWidth = (PAGE_WIDTH - (MARGIN * 2)) / 3;
-    const boxHeight = 20;
+    const boxHeight = 24;
 
     summaryItems.forEach((item, index) => {
         const x = MARGIN + (index * boxWidth);
-        doc.setFillColor(...LIGHT_BG);
-        doc.rect(x, y, boxWidth - 2, boxHeight, 'F');
 
-        doc.setFontSize(10);
-        doc.setTextColor(...SECONDARY_COLOR);
-        doc.setFont('helvetica', 'normal');
-        doc.text(item.label, x + 5, y + 8);
+        // Card Background (White with shadow-like border)
+        doc.setDrawColor(220, 220, 220);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(x + 2, y, boxWidth - 4, boxHeight, 3, 3, 'FD');
 
-        doc.setFontSize(12);
+        // Label
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
         doc.setFont('helvetica', 'bold');
-        doc.text(item.value, x + 5, y + 16);
+        doc.text(item.label.toUpperCase(), x + 6, y + 8);
+
+        // Value
+        doc.setFontSize(14);
+        doc.setTextColor(...PRIMARY_COLOR);
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.value, x + 6, y + 18);
     });
 
     y += boxHeight + 10;
@@ -112,8 +125,9 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             head: [['Product Name', 'Quantity Sold', 'Price', 'Platform', 'Receiver Name', 'Total Amount']],
             body: salesBody,
             theme: 'grid',
-            headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 },
             columnStyles: {
                 0: { cellWidth: 50 },
                 5: { halign: 'right' }
@@ -139,8 +153,9 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             head: [['Product Name', 'Stock-In Qty', 'Supplier', 'Date']],
             body: stockInBody,
             theme: 'grid',
-            headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 }
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 }
         });
         y = doc.lastAutoTable.finalY + 10;
     }
@@ -163,8 +178,9 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             head: [['Product Name', 'Return Qty', 'Platform', 'Return Reason', 'Notes']],
             body: returnBody,
             theme: 'grid',
-            headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 }
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 }
         });
         y = doc.lastAutoTable.finalY + 10;
     }
@@ -216,7 +232,7 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
             head: [['Product Name', 'Category', 'Available Stock']],
             body: stockBody,
             theme: 'grid',
-            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255] },
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
             styles: { fontSize: 9, cellPadding: 3 },
             columnStyles: {
                 2: { halign: 'right', fontStyle: 'bold' }
@@ -262,7 +278,7 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
     ];
 
     const boxWidth = (PAGE_WIDTH - (MARGIN * 2)) / 3;
-    const boxHeight = 20;
+    const boxHeight = 24;
 
     summaryItems.forEach((item, index) => {
         const row = Math.floor(index / 3);
@@ -270,18 +286,21 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         const x = MARGIN + (col * boxWidth);
         const currentY = y + (row * (boxHeight + 5));
 
-        doc.setFillColor(...LIGHT_BG);
-        doc.rect(x, currentY, boxWidth - 2, boxHeight, 'F');
+        // Card (Rounded + Border)
+        doc.setDrawColor(220, 220, 220);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(x + 2, currentY, boxWidth - 4, boxHeight, 3, 3, 'FD');
 
         doc.setFontSize(9);
-        doc.setTextColor(...SECONDARY_COLOR);
-        doc.setFont('helvetica', 'normal');
-        doc.text(item.label, x + 5, currentY + 7);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont('helvetica', 'bold');
+        doc.text(item.label.toUpperCase(), x + 6, currentY + 8);
 
         doc.setFontSize(11);
+        doc.setTextColor(...PRIMARY_COLOR); // Orange numbers
         doc.setFont('helvetica', 'bold');
         const valueText = doc.splitTextToSize(item.value, boxWidth - 10);
-        doc.text(valueText, x + 5, currentY + 15);
+        doc.text(valueText, x + 6, currentY + 18);
     });
 
     y += (Math.ceil(summaryItems.length / 3) * (boxHeight + 5)) + 10;
@@ -357,8 +376,9 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
             head: tableHeaders,
             body: tableBody,
             theme: 'grid',
-            headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 },
             columnStyles: {
                 3: { halign: 'right' },
                 4: { halign: 'center' }
@@ -386,8 +406,9 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         head: [['Product Name', 'Stock-In Qty', 'Supplier', 'Date']],
         body: stockInBody,
         theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-        styles: { fontSize: 9, cellPadding: 3 }
+        headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: LIGHT_BG },
+        styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 }
     });
 
     y = doc.lastAutoTable.finalY + 10;
@@ -410,8 +431,9 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
         head: [['Product Name', 'Return Qty', 'Platform', 'Return Reason', 'Notes']],
         body: returnBody,
         theme: 'grid',
-        headStyles: { fillColor: PRIMARY_COLOR, textColor: [255, 255, 255] },
-        styles: { fontSize: 9, cellPadding: 3 }
+        headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: LIGHT_BG },
+        styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 }
     });
 
     y = doc.lastAutoTable.finalY + 10;
@@ -434,8 +456,9 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
             head: [['Platform', 'Total Sales', '% Contribution', 'Total Returns', 'Net Performance']],
             body: platformBody,
             theme: 'grid',
-            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 },
             columnStyles: {
                 2: { halign: 'center' },
                 4: { halign: 'right', fontStyle: 'bold' }
@@ -481,8 +504,9 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
             head: [['Product Name', 'Category', 'Closing Stock (Next Month Opening)']],
             body: closingStockBody,
             theme: 'grid',
-            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255] },
-            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: SECONDARY_COLOR, textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: LIGHT_BG },
+            styles: { fontSize: 9, cellPadding: 4, lineColor: [230, 230, 230], lineWidth: 0.1 },
             columnStyles: {
                 2: { halign: 'right', fontStyle: 'bold' }
             }
@@ -502,16 +526,25 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
     const doc = new jsPDF();
     let y = addHeader(doc, "Product Performance Report", new Date().toLocaleDateString());
 
+    // Product Header Box
+    doc.setDrawColor(217, 104, 70); // Primary Orange
+    doc.setFillColor(252, 247, 245); // Light BG
+    doc.roundedRect(MARGIN, y, PAGE_WIDTH - (MARGIN * 2), 25, 3, 3, 'FD');
+
     doc.setFontSize(12);
-    doc.setTextColor(...TEXT_COLOR);
-    doc.text(`Product: ${product.name}`, MARGIN, y);
+    doc.setTextColor(47, 48, 32); // Secondary Dark
+    doc.setFont('helvetica', 'bold');
+    doc.text(`PRODUCT: ${product.name.toUpperCase()}`, MARGIN + 5, y + 8);
+
     doc.setFontSize(10);
-    doc.text(`Category: ${product.category} | Price: RM ${product.sellingPrice}`, MARGIN, y + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Category: ${product.category}`, MARGIN + 5, y + 16);
+    doc.text(`Current Price: RM ${product.sellingPrice}`, MARGIN + 80, y + 16);
 
     if (platformFilter !== 'All Platforms') {
-        doc.text(`Platform: ${platformFilter}`, PAGE_WIDTH - MARGIN, y, { align: 'right' });
+        doc.text(`Filter: ${platformFilter}`, MARGIN + 5, y + 22);
     }
-    y += 15;
+    y += 35;
 
     // Helper for aggregation by platform
     const aggregateByPlatform = (transactions) => {
@@ -531,7 +564,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
 
     // --- Table 1: Total Sales (Stock Out) ---
     doc.setFontSize(12);
-    doc.setTextColor(33, 150, 243); // Blue
+    doc.setTextColor(217, 104, 70); // Orange
     doc.text("Total Sales", MARGIN, y);
     y += 5;
 
@@ -546,7 +579,8 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         ]),
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
-        headStyles: { fillColor: [33, 150, 243], textColor: [255, 255, 255], fontStyle: 'bold' }, // Blue
+        headStyles: { fillColor: [47, 48, 32], textColor: [255, 255, 255], fontStyle: 'bold' }, // Dark
+        alternateRowStyles: { fillColor: [252, 247, 245] },
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
@@ -572,6 +606,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
         headStyles: { fillColor: [76, 175, 80], textColor: [255, 255, 255], fontStyle: 'bold' }, // Green
+        alternateRowStyles: { fillColor: [252, 247, 245] },
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
@@ -597,6 +632,7 @@ export const generateProductReportPDF = (data, product, platformFilter = 'All Pl
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 5, lineColor: [200, 200, 200], lineWidth: 0.1 },
         headStyles: { fillColor: [244, 67, 54], textColor: [255, 255, 255], fontStyle: 'bold' }, // Red
+        alternateRowStyles: { fillColor: [252, 247, 245] },
         columnStyles: {
             0: { cellWidth: 100 },
             1: { cellWidth: 50, halign: 'center' }
