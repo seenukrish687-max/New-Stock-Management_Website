@@ -14,7 +14,8 @@ const ReturnProduct = () => {
         date: new Date().toISOString().split('T')[0],
         platform: 'Tiktok',
         returnReason: '',
-        notes: ''
+        notes: '',
+        accountName: 'Ammachee Foods'
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +38,8 @@ const ReturnProduct = () => {
                 date: new Date().toISOString().split('T')[0],
                 platform: 'Tiktok',
                 returnReason: '',
-                notes: ''
+                notes: '',
+                accountName: 'Ammachee Foods'
             });
         } catch (error) {
             soundManager.playError();
@@ -92,6 +94,19 @@ const ReturnProduct = () => {
                         </div>
                     </div>
 
+
+
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Account Name</label>
+                    <select
+                        className="input-field"
+                        value={formData.accountName}
+                        onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+                        style={{ marginBottom: '1rem' }}
+                    >
+                        <option value="Ammachee Foods">Ammachee Foods</option>
+                        <option value="Arokya Health & Herbs">Arokya Health & Herbs</option>
+                    </select>
+
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sales Platform</label>
                     <select
                         className="input-field"
@@ -135,8 +150,8 @@ const ReturnProduct = () => {
                         {isSubmitting ? 'Processing Return...' : 'Confirm Return'}
                     </button>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -8,6 +8,7 @@ const ReportFilters = ({
     filterType, setFilterType,
     products, selectedProductId, setSelectedProductId,
     selectedPlatform, setSelectedPlatform,
+    selectedAccount, setSelectedAccount,
     onRefresh
 }) => {
     return (
@@ -85,6 +86,22 @@ const ReportFilters = ({
                         <option value="Shopee">Shopee</option>
                         <option value="NVS SAMA SAMA">NVS SAMA SAMA</option>
                         <option value="Walk-in">Walk-in</option>
+                    </select>
+                </div>
+            )}
+
+            {/* Account Filter */}
+            {(activeTab === 'daily' || activeTab === 'monthly') && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <select
+                        className="input-field"
+                        style={{ width: 'auto', marginBottom: 0, padding: '0.5rem' }}
+                        value={selectedAccount}
+                        onChange={(e) => setSelectedAccount(e.target.value)}
+                    >
+                        <option value="All Accounts">All Accounts</option>
+                        <option value="Ammachee Foods">Ammachee Foods</option>
+                        <option value="Arokya Health & Herbs">Arokya Health & Herbs</option>
                     </select>
                 </div>
             )}

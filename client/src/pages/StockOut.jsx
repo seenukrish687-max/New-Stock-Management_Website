@@ -14,7 +14,8 @@ const StockOut = () => {
         platform: 'Tiktok',
         customerName: '',
         paymentStatus: 'Paid',
-        receiverName: ''
+        receiverName: '',
+        accountName: 'Ammachee Foods'
     });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +45,8 @@ const StockOut = () => {
                 platform: 'Tiktok',
                 customerName: '',
                 paymentStatus: 'Paid',
-                receiverName: ''
+                receiverName: '',
+                accountName: 'Ammachee Foods'
             });
             setSelectedProduct(null);
         } catch (error) {
@@ -116,6 +118,17 @@ const StockOut = () => {
                             />
                         </div>
                     </div>
+
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Account Name</label>
+                    <select
+                        className="input-field"
+                        value={formData.accountName}
+                        onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+                        style={{ marginBottom: '1rem' }}
+                    >
+                        <option value="Ammachee Foods">Ammachee Foods</option>
+                        <option value="Arokya Health & Herbs">Arokya Health & Herbs</option>
+                    </select>
 
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Sales Platform</label>
                     <select

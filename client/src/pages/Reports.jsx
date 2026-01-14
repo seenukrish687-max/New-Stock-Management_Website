@@ -20,6 +20,7 @@ const Reports = () => {
     const [filterType, setFilterType] = useState('ALL');
     const [selectedProductId, setSelectedProductId] = useState('');
     const [selectedPlatform, setSelectedPlatform] = useState('All Platforms');
+    const [selectedAccount, setSelectedAccount] = useState('All Accounts');
 
     // --- Daily Report Logic ---
     const dailyData = useMemo(() => {
@@ -51,6 +52,11 @@ const Reports = () => {
                 stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
             }
 
+            if (selectedAccount !== 'All Accounts') {
+                stockOut = stockOut.filter(t => t.accountName === selectedAccount);
+                stockIn = stockIn.filter(t => t.type === 'IN' || t.accountName === selectedAccount);
+            }
+
             const totalSales = stockOut.reduce((sum, t) => sum + (t.quantity * (t.sellingPriceAtTime || 0)), 0);
             const totalStockOut = stockOut.reduce((sum, t) => sum + t.quantity, 0);
             const totalReturns = stockIn.filter(t => t.type === 'RETURN').reduce((sum, t) => sum + t.quantity, 0);
@@ -61,7 +67,7 @@ const Reports = () => {
             console.error("Error calculating daily data:", error);
             return { stockIn: [], stockOut: [], totalSales: 0, totalStockOut: 0, totalReturns: 0, totalStockIn: 0 };
         }
-    }, [transactions, selectedDate, filterType, selectedProductId, selectedPlatform]);
+    }, [transactions, selectedDate, filterType, selectedProductId, selectedPlatform, selectedAccount]);
 
     // --- Monthly Report Logic ---
     const monthlyData = useMemo(() => {
@@ -95,6 +101,11 @@ const Reports = () => {
             if (selectedPlatform !== 'All Platforms') {
                 stockOut = stockOut.filter(t => t.platform === selectedPlatform);
                 stockIn = stockIn.filter(t => t.type === 'IN' || t.platform === selectedPlatform);
+            }
+
+            if (selectedAccount !== 'All Accounts') {
+                stockOut = stockOut.filter(t => t.accountName === selectedAccount);
+                stockIn = stockIn.filter(t => t.type === 'IN' || t.accountName === selectedAccount);
             }
 
             const totalRevenue = stockOut.reduce((sum, t) => sum + (t.quantity * (t.sellingPriceAtTime || 0)), 0);
@@ -215,7 +226,7 @@ const Reports = () => {
                 platformPerformance: [], monthlyInsights: {}, closingStock: []
             };
         }
-    }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform]);
+    }, [transactions, products, selectedMonth, filterType, selectedProductId, selectedPlatform, selectedAccount]);
 
     // --- Product Report Logic ---
     const productData = useMemo(() => {
@@ -278,7 +289,7 @@ const Reports = () => {
 
     const confirmExportDaily = () => {
         try {
-            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes, products);
+            generateDailyReportPDF(dailyData, selectedDate, filterType, selectedPlatform, intelligentNotes, products, selectedAccount);
             setShowPreview(false);
             showToast("Report downloaded successfully!", "success");
         } catch (error) {
@@ -306,7 +317,7 @@ const Reports = () => {
 
     const confirmExportMonthly = () => {
         try {
-            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform, products);
+            generateMonthlyReportPDF(monthlyData, selectedMonth, selectedPlatform, products, selectedAccount);
             setShowPreview(false);
             showToast("Report downloaded successfully!", "success");
         } catch (error) {
@@ -412,6 +423,8 @@ const Reports = () => {
                     setSelectedProductId={setSelectedProductId}
                     selectedPlatform={selectedPlatform}
                     setSelectedPlatform={setSelectedPlatform}
+                    selectedAccount={selectedAccount}
+                    setSelectedAccount={setSelectedAccount}
                     onRefresh={() => { }}
                 />
 

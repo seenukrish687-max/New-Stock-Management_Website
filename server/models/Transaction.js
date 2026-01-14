@@ -15,6 +15,7 @@ const transactionSchema = new mongoose.Schema({
     returnReason: { type: String }, // For Return reason
     customerName: { type: String }, // For Whatsapp sales
     paymentStatus: { type: String, enum: ['Paid', 'COD'] }, // For Whatsapp sales
+    accountName: { type: String }, // For Stock Out Account Name
     sellingPriceAtTime: { type: Number }, // For Stock Out
     purchasePriceAtTime: { type: Number }, // For Stock In (optional)
     timestamp: { type: Date, default: Date.now }

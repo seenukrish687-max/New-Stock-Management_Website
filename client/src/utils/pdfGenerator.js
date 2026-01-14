@@ -57,9 +57,13 @@ const addSectionTitle = (doc, title, y) => {
     return y + 8;
 };
 
-export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms', intelligentNotes = {}, products = []) => {
+export const generateDailyReportPDF = (data, date, filterType, platformFilter = 'All Platforms', intelligentNotes = {}, products = [], accountFilter = 'All Accounts') => {
     const doc = new jsPDF();
-    let y = addHeader(doc, "Daily Stock Report", date);
+    let title = "Daily Stock Report";
+    if (accountFilter !== 'All Accounts') {
+        title += ` - ${accountFilter}`;
+    }
+    let y = addHeader(doc, title, date);
 
     // 1. Total Summary
     y = addSectionTitle(doc, "1. Total Summary", y);
@@ -229,7 +233,7 @@ export const generateDailyReportPDF = (data, date, filterType, platformFilter = 
     doc.save(`Daily_Report_${date}.pdf`);
 };
 
-export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Platforms', products = []) => {
+export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Platforms', products = [], accountFilter = 'All Accounts') => {
     const doc = new jsPDF();
 
     // --- Header ---
@@ -238,7 +242,12 @@ export const generateMonthlyReportPDF = (data, month, platformFilter = 'All Plat
     const monthName = dateObj.toLocaleString('default', { month: 'long' });
     const formattedDate = `${monthName} ${year}`;
 
-    let y = addHeader(doc, "Monthly Stock Report", formattedDate);
+    let title = "Monthly Stock Report";
+    if (accountFilter !== 'All Accounts') {
+        title += ` - ${accountFilter}`;
+    }
+
+    let y = addHeader(doc, title, formattedDate);
 
     // 1. Monthly Summary
     y = addSectionTitle(doc, "1. Monthly Summary", y);
