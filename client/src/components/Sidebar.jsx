@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun, RotateCcw, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ArrowDownLeft, ArrowUpRight, FileText, Trash2, Moon, Sun, RotateCcw, Menu, X, LogOut, Download } from 'lucide-react';
 import { useStock } from '../context/StockContext';
+import { API_URL } from '../config';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +30,26 @@ const Sidebar = () => {
         { path: '/reports', label: 'Reports', icon: <FileText size={20} /> },
         { path: '/return', label: 'Return', icon: <RotateCcw size={20} /> },
     ];
+
+    const handleBackup = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/backup`);
+            if (!response.ok) throw new Error('Failed to fetch backup data');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ammachee-stock-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('Backup downloaded successfully', 'success');
+        } catch (error) {
+            console.error('Backup error:', error);
+            showToast('Failed to download backup', 'error');
+        }
+    };
 
     const handleReset = async () => {
         if (window.confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
@@ -132,6 +153,27 @@ const Sidebar = () => {
                 >
                     {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                </button>
+
+                <button
+                    onClick={handleBackup}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '8px',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        width: '100%',
+                        textAlign: 'left',
+                        marginBottom: '0.5rem'
+                    }}
+                >
+                    <Download size={20} />
+                    <span>Backup Data</span>
                 </button>
 
                 <button

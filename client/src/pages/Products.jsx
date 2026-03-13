@@ -7,6 +7,7 @@ import { API_URL } from '../config';
 import { getCategoryColor } from '../utils/colors';
 import { generateProductReportPDF } from '../utils/pdfGenerator';
 import { soundManager } from '../utils/soundManager';
+import ProductDetailsModal from '../components/ProductDetailsModal';
 
 const Products = () => {
     const { products, addProduct, deleteProduct, updateProduct, transactions } = useStock();
@@ -120,6 +121,7 @@ const Products = () => {
 
     const [editingId, setEditingId] = useState(null);
     const [editValue, setEditValue] = useState('');
+    const [selectedProductForPassport, setSelectedProductForPassport] = useState(null);
 
     const startEditing = (product) => {
         setEditingId(product.id);
@@ -230,111 +232,129 @@ const Products = () => {
                 {filteredProducts.map(product => {
                     const categoryStyle = getCategoryColor(product.category);
                     return (
-                        <div key={product.id} className="card hover-zoom" style={{ padding: '1rem' }}>
-                            <div style={{ height: '150px', marginBottom: '1rem', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
+                        <div
+                            key={product.id}
+                            className="gallery-card group"
+                            onClick={() => setSelectedProductForPassport(product)}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="gallery-image-container">
                                 {product.imageURL ? (
                                     <img
                                         src={product.imageURL.startsWith('http') ? product.imageURL : `${API_URL}${product.imageURL}`}
                                         alt={product.name}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        className="gallery-image"
                                         onError={(e) => {
                                             e.target.onerror = null;
-                                            e.target.src = 'https://via.placeholder.com/150?text=No+Image';
-                                            e.target.style.objectFit = 'contain';
+                                            e.target.src = 'https://via.placeholder.com/350?text=No+Image';
                                         }}
                                     />
                                 ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>No Image</div>
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', backgroundColor: '#f0f0f0' }}>No Image</div>
                                 )}
+
+                                {/* Action Overlay (Visible on Hover) */}
+                                <div className="action-overlay">
+                                    <button
+                                        className="gallery-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            startEditing(product);
+                                        }}
+                                        title="Edit Stock"
+                                    >
+                                        <Edit2 size={20} />
+                                    </button>
+                                    <button
+                                        className="gallery-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleProductReport(product);
+                                        }}
+                                        title="Generate Report"
+                                    >
+                                        <FileText size={20} />
+                                    </button>
+                                    <button
+                                        className="gallery-btn delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                                                deleteProduct(product.id);
+                                                showToast('Product deleted successfully!', 'success');
+                                            }
+                                        }}
+                                        title="Delete Product"
+                                    >
+                                        <Trash2 size={20} />
+                                    </button>
+                                </div>
                             </div>
-                            <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{product.name}</h3>
-                            <div style={{ marginBottom: '0.5rem' }}>
-                                <span style={{
-                                    fontSize: '0.75rem',
-                                    padding: '0.25rem 0.5rem',
-                                    borderRadius: '12px',
-                                    backgroundColor: categoryStyle.bg,
-                                    color: categoryStyle.text,
-                                    fontWeight: '600'
-                                }}>
-                                    {product.category}
-                                </span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontWeight: 'bold', color: 'var(--color-primary-accent)' }}>RM {product.sellingPrice}</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        {editingId === product.id ? (
-                                            <input
-                                                type="number"
-                                                value={editValue}
-                                                onChange={(e) => setEditValue(e.target.value)}
-                                                onBlur={() => saveStock(product.id)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') saveStock(product.id);
-                                                    if (e.key === 'Escape') setEditingId(null);
-                                                }}
-                                                autoFocus
-                                                onClick={(e) => e.stopPropagation()}
-                                                style={{ width: '80px', padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                                            />
-                                        ) : (
-                                            <span
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    startEditing(product);
-                                                }}
-                                                style={{
-                                                    fontSize: '0.875rem',
-                                                    padding: '0.25rem 0.5rem',
-                                                    backgroundColor: product.currentStock < 10 ? '#ffebee' : '#e8f5e9',
-                                                    color: product.currentStock < 10 ? '#c62828' : '#2e7d32',
-                                                    borderRadius: '4px',
-                                                    fontWeight: '500',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.25rem'
-                                                }}
-                                                title="Click to edit stock"
-                                            >
-                                                Stock: {product.currentStock}
-                                                <Edit2 size={12} style={{ opacity: 0.5 }} />
-                                            </span>
-                                        )}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleProductReport(product);
+
+                            {/* Glass Info Overlay - NOW WITH EDITING SUPPORT */}
+                            <div className="glass-overlay">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <h3 style={{
+                                        fontWeight: '800', fontSize: '1.1rem', marginBottom: '0.25rem',
+                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, marginRight: '0.5rem'
+                                    }} title={product.name}>
+                                        {product.name}
+                                    </h3>
+                                    <span style={{ fontWeight: 'bold', color: 'var(--color-primary-accent)', fontSize: '1.1rem' }}>
+                                        RM {product.sellingPrice}
+                                    </span>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                                    <span className="badge" style={{
+                                        backgroundColor: categoryStyle.bg,
+                                        color: categoryStyle.text,
+                                    }}>
+                                        {product.category}
+                                    </span>
+
+                                    {editingId === product.id ? (
+                                        <input
+                                            type="number"
+                                            value={editValue}
+                                            onChange={(e) => setEditValue(e.target.value)}
+                                            onBlur={() => saveStock(product.id)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') saveStock(product.id);
+                                                if (e.key === 'Escape') setEditingId(null);
                                             }}
-                                            style={{ color: '#596235', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
-                                            title="Generate Report"
-                                        >
-                                            <FileText size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevent event bubbling
-                                                console.log("Delete button clicked for:", product.id);
-                                                if (window.confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                                                    console.log("Confirmed delete for:", product.id);
-                                                    console.log("Confirmed delete for:", product.id);
-                                                    deleteProduct(product.id);
-                                                    showToast('Product deleted successfully!', 'success');
-                                                }
+                                            autoFocus
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                width: '80px', padding: '0.25rem', borderRadius: '4px', border: '1px solid #ccc',
+                                                zIndex: 20, position: 'relative' // Ensure input is clickable above overlay
                                             }}
-                                            style={{ color: '#c62828', padding: '0.25rem', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', zIndex: 20, position: 'relative' }}
-                                            title="Delete Product"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
+                                        />
+                                    ) : (
+                                        <span style={{
+                                            fontSize: '0.9rem',
+                                            fontWeight: '600',
+                                            color: product.currentStock < 10 ? '#ef4444' : '#10b981',
+                                            display: 'flex', alignItems: 'center', gap: '4px'
+                                        }}>
+                                            {product.currentStock} Units
+                                            {product.currentStock < 10 && <span title="Low Stock">⚠️</span>}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     );
                 })}
             </div>
+            {/* Product Passport Modal */}
+            {selectedProductForPassport && (
+                <ProductDetailsModal
+                    product={selectedProductForPassport}
+                    onClose={() => setSelectedProductForPassport(null)}
+                    transactions={transactions}
+                />
+            )}
         </div >
     );
 };

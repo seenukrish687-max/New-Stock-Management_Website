@@ -218,6 +218,25 @@ app.get('/api/transactions', async (req, res) => {
     }
 });
 
+// Backup Data
+app.get('/api/backup', async (req, res) => {
+    try {
+        const products = await Product.find();
+        const stockIn = await Transaction.find({ type: { $in: ['IN', 'RETURN'] } });
+        const stockOut = await Transaction.find({ type: 'OUT' });
+        
+        const backupData = {
+            products,
+            transactions: { stockIn, stockOut }
+        };
+        
+        res.json(backupData);
+    } catch (error) {
+        console.error('Error generating backup:', error);
+        res.status(500).json({ error: 'Failed to generate backup' });
+    }
+});
+
 // Reset Data
 app.delete('/api/reset', async (req, res) => {
     try {

@@ -37,6 +37,17 @@ const StockOut = () => {
             setIsSubmitting(true);
             await addStockOut(formData);
             soundManager.playSuccess();
+
+            // Prepare transaction object for invoice
+            const transactionForInvoice = {
+                ...formData,
+                productName: selectedProduct.name,
+                sellingPriceAtTime: selectedProduct.sellingPrice,
+                id: Date.now().toString() // Temporary ID for immediate generation
+            };
+            setLastTransaction(transactionForInvoice);
+            setShowSuccessModal(true);
+
             showToast('Stock out recorded successfully!', 'success');
             setFormData({
                 productId: '',
